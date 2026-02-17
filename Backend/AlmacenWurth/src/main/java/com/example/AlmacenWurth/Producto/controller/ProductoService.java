@@ -69,5 +69,66 @@ public class ProductoService {
         dto.setPrioridad(p.getPrioridad().name());
         return dto;
     }
+
+    @Transactional
+    public ProductoDTO actualizar(Long id, ProductoDTO req) {
+        if (id == null) throw new IllegalArgumentException("id requerido");
+        if (req == null) throw new IllegalArgumentException("body requerido");
+
+        Producto p = productoRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Producto no encontrado: " + id));
+
+        // Validaciones mínimas (puedes hacerlas estrictas como en crear)
+        if (req.getCodigo() != null && !req.getCodigo().isBlank()) {
+            String nuevoCodigo = req.getCodigo().trim();
+            if (!nuevoCodigo.equals(p.getCodigo()) && productoRepository.existsByCodigo(nuevoCodigo)) {
+                throw new IllegalArgumentException("Ya existe un producto con codigo: " + nuevoCodigo);
+            }
+            p.setCodigo(nuevoCodigo);
+        }
+
+        if (req.getNombre() != null && !req.getNombre().isBlank()) {
+            p.setNombre(req.getNombre().trim());
+        }
+
+        if (req.getTotalUnidades() != null) {
+            if (req.getTotalUnidades() < 0) throw new IllegalArgumentException("totalUnidades >= 0");
+            p.setTotalUnidades(req.getTotalUnidades());
+        }
+
+        if (req.getStockActual() != null) {
+            if (req.getStockActual() < 0) throw new IllegalArgumentException("stockActual >= 0");
+            p.setStockActual(req.getStockActual());
+        }
+
+        if (req.getMinimoEnvasado() != null) {
+            if (req.getMinimoEnvasado() <= 0) throw new IllegalArgumentException("minimoEnvasado > 0");
+            p.setMinimoEnvasado(req.getMinimoEnvasado());
+        }
+
+        if (req.getUbicacionArticulo() != null && !req.getUbicacionArticulo().isBlank()) {
+            p.setUbicacionArticulo(req.getUbicacionArticulo().trim());
+        }
+
+        if (req.getEstado() != null && !req.getEstado().isBlank()) {
+            p.setEstado(Producto.Estado.valueOf(req.getEstado().trim()));
+        }
+
+        if (req.getPrioridad() != null && !req.getPrioridad().isBlank()) {
+            p.setPrioridad(Producto.Prioridad.valueOf(req.getPrioridad().trim()));
+        }
+
+        return toDTO(productoRepository.save(p));
+    }
+
+    @Transactional
+    public void eliminar(Long id) {
+        if (id == null) throw new IllegalArgumentException("id requerido");
+        if (!productoRepository.existsById(id)) {
+            throw new NotFoundException("Producto no encontrado: " + id);
+        }
+        productoRepository.deleteById(id); // HARD DELETE (se borra de BD)
+    }
+
 }
 

@@ -29,4 +29,18 @@ public class ProductoController {
     public List<ProductoDTO> listar() {
         return productoService.listar();
     }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ProductoDTO actualizar(@PathVariable Long id, @RequestBody ProductoDTO req) {
+        return productoService.actualizar(id, req);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
+    public void eliminar(@PathVariable Long id) {
+        productoService.eliminar(id);
+    }
+
 }

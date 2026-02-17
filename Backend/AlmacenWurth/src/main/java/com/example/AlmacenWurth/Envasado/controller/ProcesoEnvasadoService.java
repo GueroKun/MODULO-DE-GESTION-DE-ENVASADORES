@@ -7,6 +7,7 @@ import com.example.AlmacenWurth.Envasador.controller.EnvasadorService;
 import com.example.AlmacenWurth.Envasador.model.Envasador;
 import com.example.AlmacenWurth.Producto.controller.ProductoService;
 import com.example.AlmacenWurth.Producto.model.Producto;
+import com.example.AlmacenWurth.Producto.model.ProductoRepository;
 import com.example.AlmacenWurth.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,13 +21,15 @@ public class ProcesoEnvasadoService {
     private final ProcesoEnvasadoRepository repo;
     private final EnvasadorService envasadorService;
     private final ProductoService productoService;
+    private final ProductoRepository productoRepository;
 
     public ProcesoEnvasadoService(ProcesoEnvasadoRepository repo,
                                   EnvasadorService envasadorService,
-                                  ProductoService productoService) {
+                                  ProductoService productoService, ProductoRepository productoRepository) {
         this.repo = repo;
         this.envasadorService = envasadorService;
         this.productoService = productoService;
+        this.productoRepository = productoRepository;
     }
 
     // Iniciar proceso
@@ -36,10 +39,29 @@ public class ProcesoEnvasadoService {
         if (codigoProducto == null || codigoProducto.isBlank()) throw new IllegalArgumentException("codigoProducto requerido");
 
         Envasador envasador = envasadorService.obtenerOrThrow(envasadorId);
-        Producto producto = productoService.obtenerPorCodigoOrThrow(codigoProducto.trim());
 
-        // Cambiar estado del producto a EN_PROCESO (opcional pero lógico)
+        // ✅ Bloqueo del producto (evita doble inicio concurrente)
+        Producto producto = productoRepository.findByCodigoForUpdate(codigoProducto.trim())
+                .orElseThrow(() -> new NotFoundException("Producto no encontrado: " + codigoProducto));
+
+        // ✅ Regla 1: solo iniciar si está PENDIENTE
+        if (producto.getEstado() != Producto.Estado.PENDIENTE) {
+            throw new IllegalArgumentException("Solo se puede iniciar si el producto está PENDIENTE. Estado actual: " + producto.getEstado());
+        }
+
+        // ✅ Regla 2: no permitir otro proceso activo para este producto
+        if (repo.existsByProductoIdAndHoraFinIsNull(producto.getId())) {
+            throw new IllegalArgumentException("Ya existe un proceso activo para este producto.");
+        }
+
+        // (Opcional) evitar que el envasador tenga 2 activos
+        // if (repo.existsByEnvasadorIdAndHoraFinIsNull(envasadorId)) {
+        //     throw new IllegalArgumentException("El envasador ya tiene un proceso activo.");
+        // }
+
+        // Cambiar estado a EN_PROCESO
         producto.setEstado(Producto.Estado.EN_PROCESO);
+        productoRepository.save(producto);
 
         ProcesoEnvasado p = new ProcesoEnvasado();
         p.setEnvasador(envasador);
@@ -52,6 +74,7 @@ public class ProcesoEnvasadoService {
 
         return toDTO(repo.save(p));
     }
+
 
     // Finalizar proceso
     @Transactional

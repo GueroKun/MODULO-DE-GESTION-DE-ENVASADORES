@@ -20,8 +20,8 @@ public class ProcesoEnvasadoController {
     @PostMapping("/iniciar")
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('ENVASADOR','ADMIN')")
-    public ProcesoEnvasadoDTO iniciar(@RequestParam Long envasadorId, @RequestParam String codigoProducto) {
-        return service.iniciar(envasadorId, codigoProducto);
+    public ProcesoEnvasadoDTO iniciar(@RequestBody com.example.AlmacenWurth.Envasado.model.IniciarProcesoRequestDTO req) {
+        return service.iniciar(req.getEnvasadorId(), req.getCodigoProducto());
     }
 
     @PutMapping("/{id}/finalizar")
