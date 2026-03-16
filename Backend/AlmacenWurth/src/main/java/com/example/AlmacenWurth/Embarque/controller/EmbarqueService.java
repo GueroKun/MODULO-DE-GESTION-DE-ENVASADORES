@@ -3,6 +3,8 @@ package com.example.AlmacenWurth.Embarque.controller;
 import com.example.AlmacenWurth.Embarque.model.Embarque;
 import com.example.AlmacenWurth.Embarque.model.EmbarqueDTO;
 import com.example.AlmacenWurth.Embarque.model.EmbarqueRepository;
+import com.example.AlmacenWurth.EmbarqueDetalle.model.EmbarqueDetalle;
+import com.example.AlmacenWurth.EmbarqueDetalle.model.EmbarqueDetalleRepository;
 import com.example.AlmacenWurth.Usuario.model.Usuario;
 import com.example.AlmacenWurth.Usuario.model.UsuarioRepository;
 import com.example.AlmacenWurth.exception.NotFoundException;
@@ -14,6 +16,8 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import java.io.InputStream;
+import java.util.HashSet;
+import java.util.Set;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -26,13 +30,18 @@ public class EmbarqueService {
 
     private final EmbarqueRepository embarqueRepository;
     private final UsuarioRepository usuarioRepository;
+    private final EmbarqueDetalleRepository embarqueDetalleRepository;
+
 
     @Value("${app.upload.dir:uploads/embarques}")
     private String uploadDir;
 
-    public EmbarqueService(EmbarqueRepository embarqueRepository, UsuarioRepository usuarioRepository) {
+    public EmbarqueService(EmbarqueRepository embarqueRepository,
+                           UsuarioRepository usuarioRepository,
+                           EmbarqueDetalleRepository embarqueDetalleRepository) {
         this.embarqueRepository = embarqueRepository;
         this.usuarioRepository = usuarioRepository;
+        this.embarqueDetalleRepository = embarqueDetalleRepository;
     }
 
 
@@ -65,7 +74,6 @@ public class EmbarqueService {
             Path rutaDestino = carpeta.resolve(nombreGuardado);
             Files.copy(file.getInputStream(), rutaDestino, StandardCopyOption.REPLACE_EXISTING);
 
-            // Analizar archivo Excel
             ExcelMetadata metadata = analizarExcel(rutaDestino, extension);
 
             Embarque embarque = new Embarque();
@@ -77,16 +85,73 @@ public class EmbarqueService {
             embarque.setTamanoBytes(file.getSize());
             embarque.setTipoContenido(file.getContentType());
             embarque.setUsuario(usuario);
-
             embarque.setNumeroHojas(metadata.getNumeroHojas());
             embarque.setTotalFilas(metadata.getTotalFilas());
             embarque.setTotalColumnas(metadata.getTotalColumnas());
             embarque.setTotalCeldasConDatos(metadata.getTotalCeldasConDatos());
 
-            return toDTO(embarqueRepository.save(embarque));
+            Embarque embarqueGuardado = embarqueRepository.save(embarque);
+
+            guardarDetallesExcel(rutaDestino, extension, embarqueGuardado);
+
+            return toDTO(embarqueGuardado);
 
         } catch (IOException e) {
             throw new RuntimeException("Error al guardar el archivo: " + e.getMessage());
+        }
+    }
+
+    private void guardarDetallesExcel(Path rutaArchivo, String extension, Embarque embarque) {
+        Set<String> prefijosPermitidos = new HashSet<>();
+        prefijosPermitidos.add("00040");
+        prefijosPermitidos.add("00501");
+
+        try (InputStream is = Files.newInputStream(rutaArchivo);
+             Workbook workbook = extension.equalsIgnoreCase(".xls") ? new HSSFWorkbook(is) : new XSSFWorkbook(is)) {
+
+            Sheet sheet = workbook.getSheetAt(0);
+
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) { // empieza en 1 porque 0 es encabezado
+                Row row = sheet.getRow(i);
+                if (row == null) {
+                    continue;
+                }
+
+                String codigo = obtenerTextoCelda(row.getCell(0));
+                String descripcion = obtenerTextoCelda(row.getCell(1));
+                String abc = obtenerTextoCelda(row.getCell(2));
+                Integer cantidad = obtenerEnteroCelda(row.getCell(4));
+
+                if (codigo == null || codigo.isBlank()) {
+                    continue;
+                }
+
+                String codigoLimpio = codigo.trim();
+
+                if (!empiezaConPrefijoPermitido(codigoLimpio, prefijosPermitidos)) {
+                    continue;
+                }
+
+                if (descripcion == null || descripcion.isBlank()) {
+                    descripcion = "";
+                }
+
+                if (cantidad == null) {
+                    cantidad = 0;
+                }
+
+                EmbarqueDetalle detalle = new EmbarqueDetalle();
+                detalle.setEmbarque(embarque);
+                detalle.setCodigo(codigoLimpio);
+                detalle.setDescripcion(descripcion.trim());
+                detalle.setCantidad(cantidad);
+                detalle.setAbc(abc != null ? abc.trim() : null);
+
+                embarqueDetalleRepository.save(detalle);
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error al leer y guardar detalle del Excel: " + e.getMessage());
         }
     }
 
@@ -249,5 +314,52 @@ public class EmbarqueService {
         }
 
         return dto;
+    }
+
+    //obtener datois especificos
+    private boolean empiezaConPrefijoPermitido(String codigo, Set<String> prefijosPermitidos) {
+        for (String prefijo : prefijosPermitidos) {
+            if (codigo.startsWith(prefijo)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String obtenerTextoCelda(Cell cell) {
+        if (cell == null) return null;
+
+        return switch (cell.getCellType()) {
+            case STRING -> cell.getStringCellValue();
+            case NUMERIC -> {
+                double valor = cell.getNumericCellValue();
+                long entero = (long) valor;
+                if (valor == entero) {
+                    yield String.valueOf(entero);
+                }
+                yield String.valueOf(valor);
+            }
+            case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
+            case FORMULA -> cell.getCellFormula();
+            default -> null;
+        };
+    }
+
+    private Integer obtenerEnteroCelda(Cell cell) {
+        if (cell == null) return null;
+
+        try {
+            return switch (cell.getCellType()) {
+                case NUMERIC -> (int) Math.round(cell.getNumericCellValue());
+                case STRING -> {
+                    String texto = cell.getStringCellValue();
+                    if (texto == null || texto.isBlank()) yield null;
+                    yield Integer.parseInt(texto.trim());
+                }
+                default -> null;
+            };
+        } catch (Exception e) {
+            return null;
+        }
     }
 }
