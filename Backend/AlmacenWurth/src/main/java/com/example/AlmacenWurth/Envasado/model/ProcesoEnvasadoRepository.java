@@ -10,4 +10,7 @@ public interface ProcesoEnvasadoRepository extends JpaRepository<ProcesoEnvasado
     boolean existsByProductoIdAndHoraFinIsNull(Long productoId);
     // Opcional: si también quieres evitar que un envasador tenga 2 procesos activos
     boolean existsByEnvasadorIdAndHoraFinIsNull(Long envasadorId);
+
+    // NUEVO: procesos finalizados
+    List<ProcesoEnvasado> findByHoraFinIsNotNullOrderByHoraFinDesc();
 }

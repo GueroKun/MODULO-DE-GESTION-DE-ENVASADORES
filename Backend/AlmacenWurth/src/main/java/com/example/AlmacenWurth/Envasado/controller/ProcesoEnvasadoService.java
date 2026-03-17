@@ -98,6 +98,14 @@ public class ProcesoEnvasadoService {
     }
 
     @Transactional(readOnly = true)
+    public List<ProcesoEnvasadoDTO> finalizados() {
+        return repo.findByHoraFinIsNotNullOrderByHoraFinDesc()
+                .stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public ProcesoEnvasadoDTO obtener(Long id) {
         ProcesoEnvasado p = repo.findById(id)
                 .orElseThrow(() -> new NotFoundException("Proceso no encontrado: " + id));

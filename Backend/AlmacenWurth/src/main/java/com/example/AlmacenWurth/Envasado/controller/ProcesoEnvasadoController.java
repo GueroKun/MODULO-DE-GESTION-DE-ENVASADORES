@@ -36,6 +36,12 @@ public class ProcesoEnvasadoController {
         return service.enProceso();
     }
 
+    // NUEVO
+    @GetMapping("/finalizados")
+    public List<ProcesoEnvasadoDTO> finalizados() {
+        return service.finalizados();
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ENVASADOR','ADMIN','MONTACARGAS')")
     public ProcesoEnvasadoDTO obtener(@PathVariable Long id) {
