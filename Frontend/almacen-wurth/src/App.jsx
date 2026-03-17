@@ -1,35 +1,87 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { CssBaseline } from "@mui/material";
+
+import Layout from "./Layout";
+import PageNotFound from "./lib/PageNotFound";
+import PrivateRoute from "./routes/PrivateRoute";
+
+import Empacadores from "./pages/Envasadores";
+import LoginScreen from "./pages/Login";
+import Productos from "./pages/Articulos";
+import AnalisisABC from "./pages/Analisis";
+import ProcesoEnvasado from "./pages/ProcesoEnvasado";
+import ArticulosEnvasados from "./pages/ArticulosEnvasados";
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Router>
+      <CssBaseline />
+      <Routes>
+
+        {/* LOGIN */}
+        <Route path="/" element={<LoginScreen />} />
+
+        {/* RUTAS PROTEGIDAS */}
+        <Route
+          path="/empacadores"
+          element={
+            <PrivateRoute>
+              <Layout currentPageName="Empacadores">
+                <Empacadores />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/articulos"
+          element={
+            <PrivateRoute>
+              <Layout currentPageName="Articulos">
+                <Productos />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/analisis"
+          element={
+            <PrivateRoute>
+              <Layout currentPageName="Analisis">
+                <AnalisisABC />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+
+          <Route
+          path="/proceso-envasado"
+          element={
+            <PrivateRoute>
+              <Layout currentPageName="ProcesoEnvasado">
+                <ProcesoEnvasado />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+
+         <Route
+          path="/articulos-envasados"
+          element={
+            <PrivateRoute>
+              <Layout currentPageName="ArticulosEnvasados">
+                <ArticulosEnvasados />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+
+        <Route path="*" element={<PageNotFound />} />
+
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;
