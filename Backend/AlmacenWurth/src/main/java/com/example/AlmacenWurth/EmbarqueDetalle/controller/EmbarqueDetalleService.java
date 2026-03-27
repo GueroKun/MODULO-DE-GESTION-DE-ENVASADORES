@@ -19,7 +19,7 @@ public class EmbarqueDetalleService {
 
     @Transactional(readOnly = true)
     public List<EmbarqueDetalleDTO> listarPorEmbarque(Long embarqueId) {
-        return embarqueDetalleRepository.findByEmbarqueId(embarqueId)
+        return embarqueDetalleRepository.findByEmbarqueIdOrderByPrimeraLetraAbcAsc(embarqueId)
                 .stream()
                 .map(this::toDTO)
                 .toList();
