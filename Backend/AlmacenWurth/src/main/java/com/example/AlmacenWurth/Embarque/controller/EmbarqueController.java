@@ -1,6 +1,7 @@
 package com.example.AlmacenWurth.Embarque.controller;
 
 import com.example.AlmacenWurth.Embarque.model.EmbarqueDTO;
+import com.example.AlmacenWurth.Embarque.model.EmbarquePreviewDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -18,12 +19,31 @@ public class EmbarqueController {
         this.embarqueService = embarqueService;
     }
 
-    @PostMapping(value = "/upload", consumes = "multipart/form-data")
+    @PostMapping(value = "/preview", consumes = "multipart/form-data")
+    @PreAuthorize("hasAnyRole('ADMIN','MONTACARGAS')")
+    public EmbarquePreviewDTO generarPreview(@RequestParam("file") MultipartFile file,
+                                             @RequestParam(required = false) Long usuarioId) {
+        return embarqueService.generarPreview(file, usuarioId);
+    }
+
+    @GetMapping("/preview/{previewId}")
+    @PreAuthorize("hasAnyRole('ADMIN','MONTACARGAS')")
+    public EmbarquePreviewDTO obtenerPreview(@PathVariable String previewId) {
+        return embarqueService.obtenerPreview(previewId);
+    }
+
+    @PostMapping("/confirmar/{previewId}")
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('ADMIN','MONTACARGAS')")
-    public EmbarqueDTO subirArchivo(@RequestParam("file") MultipartFile file,
-                                    @RequestParam(required = false) Long usuarioId) {
-        return embarqueService.subirArchivo(file, usuarioId);
+    public EmbarqueDTO confirmarPreview(@PathVariable String previewId) {
+        return embarqueService.confirmarPreview(previewId);
+    }
+
+    @DeleteMapping("/preview/{previewId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAnyRole('ADMIN','MONTACARGAS')")
+    public void cancelarPreview(@PathVariable String previewId) {
+        embarqueService.cancelarPreview(previewId);
     }
 
     @GetMapping

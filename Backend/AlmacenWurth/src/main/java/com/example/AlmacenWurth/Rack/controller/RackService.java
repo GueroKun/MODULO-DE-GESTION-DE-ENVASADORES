@@ -1,9 +1,10 @@
 package com.example.AlmacenWurth.Rack.controller;
 
-import com.example.AlmacenWurth.Rack.model.Rack;
-import com.example.AlmacenWurth.Rack.model.RackDTO;
-import com.example.AlmacenWurth.Rack.model.RackRepository;
+import com.example.AlmacenWurth.ArticuloTarima.model.ArticuloTarima;
+import com.example.AlmacenWurth.ArticuloTarima.model.ArticuloTarimaRepository;
+import com.example.AlmacenWurth.Rack.model.*;
 
+import com.example.AlmacenWurth.Tarima.model.Tarima;
 import com.example.AlmacenWurth.Tarima.model.TarimaRepository;
 import com.example.AlmacenWurth.exception.NotFoundException;
 import org.springframework.stereotype.Service;
@@ -16,10 +17,14 @@ public class RackService {
 
     private final RackRepository rackRepository;
     private final TarimaRepository tarimaRepository;
+    private final ArticuloTarimaRepository articuloTarimaRepository;
 
-    public RackService(RackRepository rackRepository, TarimaRepository tarimaRepository) {
+    public RackService(RackRepository rackRepository,
+                       TarimaRepository tarimaRepository,
+                       ArticuloTarimaRepository articuloTarimaRepository) {
         this.rackRepository = rackRepository;
         this.tarimaRepository = tarimaRepository;
+        this.articuloTarimaRepository = articuloTarimaRepository;
     }
 
     @Transactional
@@ -41,6 +46,76 @@ public class RackService {
         rack.setLimiteTarimas(req.getLimiteTarimas());
 
         return toDTO(rackRepository.save(rack));
+    }
+
+    @Transactional(readOnly = true)
+    public RackDetalleDTO obtenerDetalle(Long rackId) {
+        Rack rack = obtenerOrThrow(rackId);
+
+        List<Tarima> tarimas = tarimaRepository.findByRackId(rackId);
+
+        List<TarimaRackDetalleDTO> tarimasDTO = tarimas.stream().map(tarima -> {
+            TarimaRackDetalleDTO tarimaDTO = new TarimaRackDetalleDTO();
+            tarimaDTO.setId(tarima.getId());
+            tarimaDTO.setNumeroReferencia(tarima.getNumeroReferencia());
+
+            List<ArticuloRackDetalleDTO> articulosDTO = articuloTarimaRepository.findByTarimaId(tarima.getId())
+                    .stream()
+                    .map(this::toArticuloRackDetalleDTO)
+                    .toList();
+
+            tarimaDTO.setArticulos(articulosDTO);
+            return tarimaDTO;
+        }).toList();
+
+        RackDetalleDTO dto = new RackDetalleDTO();
+        dto.setId(rack.getId());
+        dto.setUbicacion(rack.getUbicacion());
+        dto.setLimiteTarimas(rack.getLimiteTarimas());
+        dto.setTotalTarimas((long) tarimas.size());
+        dto.setTarimas(tarimasDTO);
+
+        return dto;
+    }
+
+    private ArticuloRackDetalleDTO toArticuloRackDetalleDTO(ArticuloTarima articulo) {
+        ArticuloRackDetalleDTO dto = new ArticuloRackDetalleDTO();
+        dto.setId(articulo.getId());
+        dto.setCodigo(articulo.getCodigo());
+        dto.setCantidad(articulo.getCantidad());
+        return dto;
+    }
+
+    @Transactional(readOnly = true)
+    public List<RackDetalleDTO> listarDetalleCompleto() {
+        List<Rack> racks = rackRepository.findAll();
+
+        return racks.stream().map(rack -> {
+            List<Tarima> tarimas = tarimaRepository.findByRackId(rack.getId());
+
+            List<TarimaRackDetalleDTO> tarimasDTO = tarimas.stream().map(tarima -> {
+                TarimaRackDetalleDTO tarimaDTO = new TarimaRackDetalleDTO();
+                tarimaDTO.setId(tarima.getId());
+                tarimaDTO.setNumeroReferencia(tarima.getNumeroReferencia());
+
+                List<ArticuloRackDetalleDTO> articulosDTO = articuloTarimaRepository.findByTarimaId(tarima.getId())
+                        .stream()
+                        .map(this::toArticuloRackDetalleDTO)
+                        .toList();
+
+                tarimaDTO.setArticulos(articulosDTO);
+                return tarimaDTO;
+            }).toList();
+
+            RackDetalleDTO dto = new RackDetalleDTO();
+            dto.setId(rack.getId());
+            dto.setUbicacion(rack.getUbicacion());
+            dto.setLimiteTarimas(rack.getLimiteTarimas());
+            dto.setTotalTarimas((long) tarimas.size());
+            dto.setTarimas(tarimasDTO);
+
+            return dto;
+        }).toList();
     }
 
     @Transactional(readOnly = true)

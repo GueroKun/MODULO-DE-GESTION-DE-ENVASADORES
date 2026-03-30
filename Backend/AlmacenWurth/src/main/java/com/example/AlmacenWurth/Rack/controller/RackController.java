@@ -1,6 +1,7 @@
 package com.example.AlmacenWurth.Rack.controller;
 
 import com.example.AlmacenWurth.Rack.model.RackDTO;
+import com.example.AlmacenWurth.Rack.model.RackDetalleDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -41,5 +42,32 @@ public class RackController {
     @PreAuthorize("hasRole('ADMIN')")
     public void eliminar(@PathVariable Long id) {
         rackService.eliminar(id);
+    }
+
+//    Con este endpoint puedes hacer una pantalla donde:
+//    arriba muestras la ubicación del rack
+//    abajo las tarimas del rack
+//    dentro de cada tarima muestras sus artículos
+    @GetMapping("/{id}/detalle")
+    @PreAuthorize("hasAnyRole('ADMIN','MONTACARGAS')")
+    public com.example.AlmacenWurth.Rack.model.RackDetalleDTO obtenerDetalle(@PathVariable Long id) {
+        return rackService.obtenerDetalle(id);
+    }
+
+//    Con este endpoint puedes pintar directamente una vista tipo:
+//    Rack 1
+//      Tarima A
+//          artículo X
+//          artículo Y
+//      Tarima B
+//            articulo Z
+//    Rack 2
+//      Tarima C
+    //      articulo a
+
+    @GetMapping("/detalle")
+    @PreAuthorize("hasAnyRole('ADMIN','MONTACARGAS')")
+    public List<RackDetalleDTO> listarDetalleCompleto() {
+        return rackService.listarDetalleCompleto();
     }
 }
