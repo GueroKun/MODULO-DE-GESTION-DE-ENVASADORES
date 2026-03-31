@@ -41,6 +41,9 @@ public class ProcesoEnvasado {
     @Column(name="hora_fin")
     private LocalDateTime horaFin;
 
+    @Column(name = "cantidad_envasada")
+    private Integer cantidadEnvasada;
+
     public ProcesoEnvasado() {}
 
     public Long getId() { return id; }
@@ -60,6 +63,10 @@ public class ProcesoEnvasado {
     public void setMinimoEnvasado(Integer minimoEnvasado) { this.minimoEnvasado = minimoEnvasado; }
     public void setHoraInicio(LocalDateTime horaInicio) { this.horaInicio = horaInicio; }
     public void setHoraFin(LocalDateTime horaFin) { this.horaFin = horaFin; }
+
+    public Integer getCantidadEnvasada() {return cantidadEnvasada;}
+
+    public void setCantidadEnvasada(Integer cantidadEnvasada) {this.cantidadEnvasada = cantidadEnvasada;}
 
     @Transient
     public Long getTiempoTranscurridoSegundos() {

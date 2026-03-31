@@ -33,4 +33,3 @@ public class ProductoDTO {
     public void setEstado(String estado) { this.estado = estado; }
     public void setPrioridad(String prioridad) { this.prioridad = prioridad; }
 }
-

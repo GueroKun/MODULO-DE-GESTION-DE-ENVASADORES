@@ -7,6 +7,8 @@ import com.example.AlmacenWurth.Embarque.model.EmbarqueDetallePreviewDTO;
 import com.example.AlmacenWurth.Embarque.model.EmbarqueRepository;
 import com.example.AlmacenWurth.EmbarqueDetalle.model.EmbarqueDetalle;
 import com.example.AlmacenWurth.EmbarqueDetalle.model.EmbarqueDetalleRepository;
+import com.example.AlmacenWurth.Producto.model.Producto;
+import com.example.AlmacenWurth.Producto.model.ProductoRepository;
 import com.example.AlmacenWurth.Usuario.model.Usuario;
 import com.example.AlmacenWurth.Usuario.model.UsuarioRepository;
 import com.example.AlmacenWurth.exception.NotFoundException;
@@ -31,6 +33,7 @@ public class EmbarqueService {
     private final EmbarqueRepository embarqueRepository;
     private final UsuarioRepository usuarioRepository;
     private final EmbarqueDetalleRepository embarqueDetalleRepository;
+    private final ProductoRepository productoRepository;
 
     @Value("${app.upload.dir:uploads/embarques}")
     private String uploadDir;
@@ -42,10 +45,12 @@ public class EmbarqueService {
 
     public EmbarqueService(EmbarqueRepository embarqueRepository,
                            UsuarioRepository usuarioRepository,
-                           EmbarqueDetalleRepository embarqueDetalleRepository) {
+                           EmbarqueDetalleRepository embarqueDetalleRepository,
+                           ProductoRepository productoRepository) {
         this.embarqueRepository = embarqueRepository;
         this.usuarioRepository = usuarioRepository;
         this.embarqueDetalleRepository = embarqueDetalleRepository;
+        this.productoRepository = productoRepository;
     }
 
     @Transactional(readOnly = true)
@@ -202,6 +207,8 @@ public class EmbarqueService {
                 detalle.setAbc(registro.getAbc());
 
                 embarqueDetalleRepository.save(detalle);
+
+                crearOActualizarProductoDesdeDetalle(registro);
             }
 
             previews.remove(previewId);
@@ -210,6 +217,33 @@ public class EmbarqueService {
 
         } catch (IOException e) {
             throw new RuntimeException("Error al confirmar preview: " + e.getMessage());
+        }
+    }
+
+    private void crearOActualizarProductoDesdeDetalle(EmbarqueDetallePreviewDTO registro) {
+        Optional<Producto> productoOpt = productoRepository.findByCodigo(registro.getCodigo());
+
+        if (productoOpt.isPresent()) {
+            Producto producto = productoOpt.get();
+
+            producto.setNombre(registro.getDescripcion());
+            producto.setTotalUnidades(registro.getCantidad());
+            producto.setPrioridad(registro.getAbc());
+            producto.setEstado(Producto.Estado.PENDIENTE);
+
+            productoRepository.save(producto);
+        } else {
+            Producto producto = new Producto();
+            producto.setCodigo(registro.getCodigo());
+            producto.setNombre(registro.getDescripcion());
+            producto.setTotalUnidades(registro.getCantidad());
+            producto.setStockActual(0);
+            producto.setMinimoEnvasado(25);
+            producto.setUbicacionArticulo("");
+            producto.setEstado(Producto.Estado.PENDIENTE);
+            producto.setPrioridad(registro.getAbc());
+
+            productoRepository.save(producto);
         }
     }
 

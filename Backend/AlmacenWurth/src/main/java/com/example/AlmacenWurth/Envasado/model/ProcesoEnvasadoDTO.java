@@ -15,6 +15,7 @@ public class ProcesoEnvasadoDTO {
     private LocalDateTime horaInicio;
     private LocalDateTime horaFin;
     private Long tiempoTranscurridoSegundos;
+    private Integer cantidadEnvasada;
 
     public ProcesoEnvasadoDTO() {}
 
@@ -27,6 +28,14 @@ public class ProcesoEnvasadoDTO {
     public LocalDateTime getHoraInicio() { return horaInicio; }
     public LocalDateTime getHoraFin() { return horaFin; }
     public Long getTiempoTranscurridoSegundos() { return tiempoTranscurridoSegundos; }
+
+    public Integer getCantidadEnvasada() {
+        return cantidadEnvasada;
+    }
+
+    public void setCantidadEnvasada(Integer cantidadEnvasada) {
+        this.cantidadEnvasada = cantidadEnvasada;
+    }
 
     public void setId(Long id) { this.id = id; }
     public void setEnvasadorId(Long envasadorId) { this.envasadorId = envasadorId; }

@@ -40,16 +40,13 @@ public class ProcesoEnvasadoService {
 
         Envasador envasador = envasadorService.obtenerOrThrow(envasadorId);
 
-        // ✅ Bloqueo del producto (evita doble inicio concurrente)
         Producto producto = productoRepository.findByCodigoForUpdate(codigoProducto.trim())
                 .orElseThrow(() -> new NotFoundException("Producto no encontrado: " + codigoProducto));
 
-        // ✅ Regla 1: solo iniciar si está PENDIENTE
         if (producto.getEstado() != Producto.Estado.PENDIENTE) {
             throw new IllegalArgumentException("Solo se puede iniciar si el producto está PENDIENTE. Estado actual: " + producto.getEstado());
         }
 
-        // ✅ Regla 2: no permitir otro proceso activo para este producto
         if (repo.existsByProductoIdAndHoraFinIsNull(producto.getId())) {
             throw new IllegalArgumentException("Ya existe un proceso activo para este producto.");
         }
@@ -59,7 +56,6 @@ public class ProcesoEnvasadoService {
         //     throw new IllegalArgumentException("El envasador ya tiene un proceso activo.");
         // }
 
-        // Cambiar estado a EN_PROCESO
         producto.setEstado(Producto.Estado.EN_PROCESO);
         productoRepository.save(producto);
 
@@ -82,13 +78,38 @@ public class ProcesoEnvasadoService {
         ProcesoEnvasado p = repo.findById(procesoId)
                 .orElseThrow(() -> new NotFoundException("Proceso no encontrado: " + procesoId));
 
-        if (p.getHoraFin() != null) throw new IllegalArgumentException("El proceso ya está finalizado");
+        if (p.getHoraFin() != null) {
+            throw new IllegalArgumentException("El proceso ya está finalizado");
+        }
 
+        Producto producto = p.getProducto();
+
+        Integer totalUnidadesActual = producto.getTotalUnidades();
+        if (totalUnidadesActual == null) {
+            totalUnidadesActual = 0;
+        }
+
+        if (totalUnidadesActual <= 0) {
+            throw new IllegalArgumentException("El producto no tiene unidades pendientes por envasar");
+        }
+
+        Integer stockActual = producto.getStockActual();
+        if (stockActual == null) {
+            stockActual = 0;
+        }
+
+
+        int cantidadEnvasada = totalUnidadesActual;
+
+        producto.setStockActual(stockActual + cantidadEnvasada);
+        producto.setTotalUnidades(0);
+        producto.setEstado(Producto.Estado.FINALIZADO);
+
+        // Guardar cuánto se envasó en este proceso
+        p.setCantidadEnvasada(cantidadEnvasada);
         p.setHoraFin(LocalDateTime.now());
 
-        // Producto a FINALIZADO (si ese es el flujo)
-        p.getProducto().setEstado(Producto.Estado.FINALIZADO);
-
+        productoRepository.save(producto);
         return toDTO(repo.save(p));
     }
 
@@ -123,6 +144,7 @@ public class ProcesoEnvasadoService {
         dto.setHoraInicio(p.getHoraInicio());
         dto.setHoraFin(p.getHoraFin());
         dto.setTiempoTranscurridoSegundos(p.getTiempoTranscurridoSegundos());
+        dto.setCantidadEnvasada(p.getCantidadEnvasada());
         return dto;
     }
 }

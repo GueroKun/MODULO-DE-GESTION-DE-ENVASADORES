@@ -27,7 +27,7 @@ public class ProductoService {
         if (req.getMinimoEnvasado() == null || req.getMinimoEnvasado() <= 0) throw new IllegalArgumentException("minimoEnvasado > 0");
         if (req.getUbicacionArticulo() == null || req.getUbicacionArticulo().isBlank()) throw new IllegalArgumentException("ubicacionArticulo requerido");
         if (req.getEstado() == null || req.getEstado().isBlank()) throw new IllegalArgumentException("estado requerido");
-        if (req.getPrioridad() == null || req.getPrioridad().isBlank()) throw new IllegalArgumentException("prioridad requerida");
+
 
         String codigo = req.getCodigo().trim();
         if (productoRepository.existsByCodigo(codigo)) throw new IllegalArgumentException("Ya existe producto con codigo: " + codigo);
@@ -40,7 +40,7 @@ public class ProductoService {
         p.setMinimoEnvasado(req.getMinimoEnvasado());
         p.setUbicacionArticulo(req.getUbicacionArticulo().trim());
         p.setEstado(Producto.Estado.valueOf(req.getEstado().trim()));
-        p.setPrioridad(Producto.Prioridad.valueOf(req.getPrioridad().trim()));
+        p.setPrioridad(req.getPrioridad() != null ? req.getPrioridad().trim() : null);
 
         return toDTO(productoRepository.save(p));
     }
@@ -66,7 +66,7 @@ public class ProductoService {
         dto.setMinimoEnvasado(p.getMinimoEnvasado());
         dto.setUbicacionArticulo(p.getUbicacionArticulo());
         dto.setEstado(p.getEstado().name());
-        dto.setPrioridad(p.getPrioridad().name());
+        dto.setPrioridad(p.getPrioridad()!= null ? p.getPrioridad().trim() : null);
         return dto;
     }
 
@@ -115,7 +115,7 @@ public class ProductoService {
         }
 
         if (req.getPrioridad() != null && !req.getPrioridad().isBlank()) {
-            p.setPrioridad(Producto.Prioridad.valueOf(req.getPrioridad().trim()));
+            p.setPrioridad(req.getPrioridad().trim());
         }
 
         return toDTO(productoRepository.save(p));
