@@ -17,11 +17,11 @@ public class ProcesoEnvasado {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional=false, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="envasador_id")
     private Envasador envasador;
 
-    @ManyToOne(optional=false, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="producto_id")
     private Producto producto;
 
