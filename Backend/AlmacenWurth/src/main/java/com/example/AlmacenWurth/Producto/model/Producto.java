@@ -16,6 +16,12 @@ public class Producto {
         FINALIZADO
     }
 
+    public enum Prioridad {
+        ALTA,
+        MEDIA,
+        BAJA
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -42,9 +48,9 @@ public class Producto {
     @Column(nullable = false, length = 20)
     private Estado estado;
 
-    // ✅ ahora prioridad guarda el ABC completo, ej: FEG
-    @Column(length = 20)
-    private String prioridad;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private Prioridad prioridad;
 
     public Producto() {
     }
@@ -57,7 +63,7 @@ public class Producto {
     public Integer getMinimoEnvasado() { return minimoEnvasado; }
     public String getUbicacionArticulo() { return ubicacionArticulo; }
     public Estado getEstado() { return estado; }
-    public String getPrioridad() { return prioridad; }
+    public Prioridad getPrioridad() { return prioridad; }
 
     public void setId(Long id) { this.id = id; }
     public void setCodigo(String codigo) { this.codigo = codigo; }
@@ -67,5 +73,5 @@ public class Producto {
     public void setMinimoEnvasado(Integer minimoEnvasado) { this.minimoEnvasado = minimoEnvasado; }
     public void setUbicacionArticulo(String ubicacionArticulo) { this.ubicacionArticulo = ubicacionArticulo; }
     public void setEstado(Estado estado) { this.estado = estado; }
-    public void setPrioridad(String prioridad) { this.prioridad = prioridad; }
+    public void setPrioridad(Prioridad prioridad) { this.prioridad = prioridad; }
 }

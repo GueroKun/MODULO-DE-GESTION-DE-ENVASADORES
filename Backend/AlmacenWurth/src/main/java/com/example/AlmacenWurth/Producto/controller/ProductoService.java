@@ -1,5 +1,7 @@
 package com.example.AlmacenWurth.Producto.controller;
 
+import com.example.AlmacenWurth.Envasado.model.ProcesoEnvasado;
+import com.example.AlmacenWurth.Envasado.model.ProcesoEnvasadoRepository;
 import com.example.AlmacenWurth.Producto.model.Producto;
 import com.example.AlmacenWurth.Producto.model.ProductoDTO;
 import com.example.AlmacenWurth.Producto.model.ProductoRepository;
@@ -13,9 +15,11 @@ import java.util.List;
 public class ProductoService {
 
     private final ProductoRepository productoRepository;
+    private final ProcesoEnvasadoRepository procesoEnvasadoRepository;
 
-    public ProductoService(ProductoRepository productoRepository) {
+    public ProductoService(ProductoRepository productoRepository, ProcesoEnvasadoRepository procesoEnvasadoRepository) {
         this.productoRepository = productoRepository;
+        this.procesoEnvasadoRepository = procesoEnvasadoRepository;
     }
 
     @Transactional
@@ -40,14 +44,14 @@ public class ProductoService {
         p.setMinimoEnvasado(req.getMinimoEnvasado());
         p.setUbicacionArticulo(req.getUbicacionArticulo().trim());
         p.setEstado(Producto.Estado.valueOf(req.getEstado().trim()));
-        p.setPrioridad(req.getPrioridad() != null ? req.getPrioridad().trim() : null);
+        p.setPrioridad(Producto.Prioridad.valueOf(req.getPrioridad().trim()));
 
         return toDTO(productoRepository.save(p));
     }
 
     @Transactional(readOnly = true)
     public List<ProductoDTO> listar() {
-        return productoRepository.findAll().stream().map(this::toDTO).toList();
+        return productoRepository.findAllOrderByPrioridadAscYCodigoAsc().stream().map(this::toDTO).toList();
     }
 
     @Transactional(readOnly = true)
@@ -66,7 +70,7 @@ public class ProductoService {
         dto.setMinimoEnvasado(p.getMinimoEnvasado());
         dto.setUbicacionArticulo(p.getUbicacionArticulo());
         dto.setEstado(p.getEstado().name());
-        dto.setPrioridad(p.getPrioridad()!= null ? p.getPrioridad().trim() : null);
+        dto.setPrioridad(p.getPrioridad().name());
         return dto;
     }
 
@@ -115,7 +119,7 @@ public class ProductoService {
         }
 
         if (req.getPrioridad() != null && !req.getPrioridad().isBlank()) {
-            p.setPrioridad(req.getPrioridad().trim());
+            p.setPrioridad(Producto.Prioridad.valueOf(req.getPrioridad().trim()));
         }
 
         return toDTO(productoRepository.save(p));
@@ -123,11 +127,16 @@ public class ProductoService {
 
     @Transactional
     public void eliminar(Long id) {
-        if (id == null) throw new IllegalArgumentException("id requerido");
-        if (!productoRepository.existsById(id)) {
-            throw new NotFoundException("Producto no encontrado: " + id);
+        Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Producto no encontrado: " + id));
+
+        List<ProcesoEnvasado> procesos = procesoEnvasadoRepository.findByProductoId(id);
+        for (ProcesoEnvasado proceso : procesos) {
+            proceso.setProducto(null);
         }
-        productoRepository.deleteById(id); // HARD DELETE (se borra de BD)
+
+        procesoEnvasadoRepository.saveAll(procesos);
+        productoRepository.delete(producto);
     }
 
 }

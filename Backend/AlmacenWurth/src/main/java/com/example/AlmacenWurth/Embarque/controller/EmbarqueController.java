@@ -20,40 +20,40 @@ public class EmbarqueController {
     }
 
     @PostMapping(value = "/preview", consumes = "multipart/form-data")
-    @PreAuthorize("hasAnyRole('ADMIN','MONTACARGAS')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     public EmbarquePreviewDTO generarPreview(@RequestParam("file") MultipartFile file,
                                              @RequestParam(required = false) Long usuarioId) {
         return embarqueService.generarPreview(file, usuarioId);
     }
 
     @GetMapping("/preview/{previewId}")
-    @PreAuthorize("hasAnyRole('ADMIN','MONTACARGAS')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     public EmbarquePreviewDTO obtenerPreview(@PathVariable String previewId) {
         return embarqueService.obtenerPreview(previewId);
     }
 
     @PostMapping("/confirmar/{previewId}")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('ADMIN','MONTACARGAS')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     public EmbarqueDTO confirmarPreview(@PathVariable String previewId) {
         return embarqueService.confirmarPreview(previewId);
     }
 
     @DeleteMapping("/preview/{previewId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasAnyRole('ADMIN','MONTACARGAS')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     public void cancelarPreview(@PathVariable String previewId) {
         embarqueService.cancelarPreview(previewId);
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','MONTACARGAS')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     public List<EmbarqueDTO> listar() {
         return embarqueService.listar();
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','MONTACARGAS')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     public EmbarqueDTO obtener(@PathVariable Long id) {
         return embarqueService.obtener(id);
     }

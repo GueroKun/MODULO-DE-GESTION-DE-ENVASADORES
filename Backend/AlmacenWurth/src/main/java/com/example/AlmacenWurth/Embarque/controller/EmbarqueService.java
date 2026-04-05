@@ -223,12 +223,14 @@ public class EmbarqueService {
     private void crearOActualizarProductoDesdeDetalle(EmbarqueDetallePreviewDTO registro) {
         Optional<Producto> productoOpt = productoRepository.findByCodigo(registro.getCodigo());
 
+        Producto.Prioridad prioridadCalculada = convertirAbcAPrioridad(registro.getAbc());
+
         if (productoOpt.isPresent()) {
             Producto producto = productoOpt.get();
 
             producto.setNombre(registro.getDescripcion());
             producto.setTotalUnidades(registro.getCantidad());
-            producto.setPrioridad(registro.getAbc());
+            producto.setPrioridad(prioridadCalculada);
             producto.setEstado(Producto.Estado.PENDIENTE);
 
             productoRepository.save(producto);
@@ -241,10 +243,28 @@ public class EmbarqueService {
             producto.setMinimoEnvasado(25);
             producto.setUbicacionArticulo("");
             producto.setEstado(Producto.Estado.PENDIENTE);
-            producto.setPrioridad(registro.getAbc());
+            producto.setPrioridad(prioridadCalculada);
 
             productoRepository.save(producto);
         }
+    }
+
+    private Producto.Prioridad convertirAbcAPrioridad(String abc) {
+        if (abc == null || abc.isBlank()) {
+            return Producto.Prioridad.BAJA;
+        }
+
+        char letra = Character.toUpperCase(abc.trim().charAt(0));
+
+        if (letra >= 'A' && letra <= 'C') {
+            return Producto.Prioridad.ALTA;
+        }
+
+        if (letra >= 'D' && letra <= 'I') {
+            return Producto.Prioridad.MEDIA;
+        }
+
+        return Producto.Prioridad.BAJA;
     }
 
     public void cancelarPreview(String previewId) {

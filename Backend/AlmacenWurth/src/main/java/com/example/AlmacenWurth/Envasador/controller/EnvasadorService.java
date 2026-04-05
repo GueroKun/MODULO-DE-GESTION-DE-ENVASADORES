@@ -1,5 +1,7 @@
 package com.example.AlmacenWurth.Envasador.controller;
 
+import com.example.AlmacenWurth.Envasado.model.ProcesoEnvasado;
+import com.example.AlmacenWurth.Envasado.model.ProcesoEnvasadoRepository;
 import com.example.AlmacenWurth.Envasador.model.Envasador;
 import com.example.AlmacenWurth.Envasador.model.EnvasadorDTO;
 import com.example.AlmacenWurth.Envasador.model.EnvasadorRepository;
@@ -13,9 +15,11 @@ import java.util.List;
 public class EnvasadorService {
 
     private final EnvasadorRepository envasadorRepository;
+    private final ProcesoEnvasadoRepository procesoEnvasadoRepository;
 
-    public EnvasadorService(EnvasadorRepository envasadorRepository) {
+    public EnvasadorService(EnvasadorRepository envasadorRepository, ProcesoEnvasadoRepository procesoEnvasadoRepository) {
         this.envasadorRepository = envasadorRepository;
+        this.procesoEnvasadoRepository = procesoEnvasadoRepository;
     }
 
     @Transactional
@@ -48,8 +52,16 @@ public class EnvasadorService {
 
     @Transactional
     public void eliminar(Long id) {
-        if (!envasadorRepository.existsById(id)) throw new NotFoundException("Envasador no encontrado: " + id);
-        envasadorRepository.deleteById(id); // HARD DELETE como pediste
+        Envasador envasador = envasadorRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Envasador no encontrado: " + id));
+
+        List<ProcesoEnvasado> procesos = procesoEnvasadoRepository.findByEnvasadorId(id);
+        for (ProcesoEnvasado proceso : procesos) {
+            proceso.setEnvasador(null);
+        }
+
+        procesoEnvasadoRepository.saveAll(procesos);
+        envasadorRepository.delete(envasador);
     }
 
     @Transactional(readOnly = true)

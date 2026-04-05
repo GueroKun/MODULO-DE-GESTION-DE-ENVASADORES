@@ -62,7 +62,7 @@ public class ProcesoEnvasadoService {
         ProcesoEnvasado p = new ProcesoEnvasado();
         p.setEnvasador(envasador);
         p.setProducto(producto);
-
+        p.setNombreEnvasador(envasador.getNombre());
         p.setCodigoProducto(producto.getCodigo());
         p.setNombreProducto(producto.getNombre());
         p.setMinimoEnvasado(producto.getMinimoEnvasado());
@@ -136,10 +136,19 @@ public class ProcesoEnvasadoService {
     private ProcesoEnvasadoDTO toDTO(ProcesoEnvasado p) {
         ProcesoEnvasadoDTO dto = new ProcesoEnvasadoDTO();
         dto.setId(p.getId());
-        dto.setEnvasadorId(p.getEnvasador().getId());
-        dto.setEnvasadorNombre(p.getEnvasador().getNombre());
-        dto.setCodigoProducto(p.getCodigoProducto());
-        dto.setNombreProducto(p.getNombreProducto());
+        if (p.getEnvasador() != null) {
+            dto.setEnvasadorId(p.getEnvasador().getId());
+            dto.setEnvasadorNombre(p.getEnvasador().getNombre());
+        } else {
+            dto.setEnvasadorNombre(p.getNombreEnvasador());
+        }
+        if (p.getProducto() != null) {
+            dto.setCodigoProducto(p.getProducto().getCodigo());
+            dto.setNombreProducto(p.getProducto().getNombre());
+        } else {
+            dto.setCodigoProducto(p.getCodigoProducto());
+            dto.setNombreProducto(p.getNombreProducto());
+        };
         dto.setMinimoEnvasado(p.getMinimoEnvasado());
         dto.setHoraInicio(p.getHoraInicio());
         dto.setHoraFin(p.getHoraFin());

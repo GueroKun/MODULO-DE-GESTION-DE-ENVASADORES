@@ -18,11 +18,11 @@ public class ProcesoEnvasado {
     private Long id;
 
     @ManyToOne(optional=false, fetch = FetchType.LAZY)
-    @JoinColumn(name="envasador_id", nullable=false)
+    @JoinColumn(name="envasador_id")
     private Envasador envasador;
 
     @ManyToOne(optional=false, fetch = FetchType.LAZY)
-    @JoinColumn(name="producto_id", nullable=false)
+    @JoinColumn(name="producto_id")
     private Producto producto;
 
     // Snapshot por si el producto cambia después
@@ -31,6 +31,9 @@ public class ProcesoEnvasado {
 
     @Column(name="nombre_producto", nullable=false, length=200)
     private String nombreProducto;
+
+    @Column(name = "nombre_envasador", nullable = false, length = 120)
+    private String nombreEnvasador;
 
     @Column(name="minimo_envasado", nullable=false)
     private Integer minimoEnvasado;
@@ -63,6 +66,14 @@ public class ProcesoEnvasado {
     public void setMinimoEnvasado(Integer minimoEnvasado) { this.minimoEnvasado = minimoEnvasado; }
     public void setHoraInicio(LocalDateTime horaInicio) { this.horaInicio = horaInicio; }
     public void setHoraFin(LocalDateTime horaFin) { this.horaFin = horaFin; }
+
+    public String getNombreEnvasador() {
+        return nombreEnvasador;
+    }
+
+    public void setNombreEnvasador(String nombreEnvasador) {
+        this.nombreEnvasador = nombreEnvasador;
+    }
 
     public Integer getCantidadEnvasada() {return cantidadEnvasada;}
 
