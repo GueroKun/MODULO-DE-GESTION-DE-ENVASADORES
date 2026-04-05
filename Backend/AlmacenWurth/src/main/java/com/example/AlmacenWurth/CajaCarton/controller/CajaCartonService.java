@@ -48,8 +48,6 @@ public class CajaCartonService {
 
         CajaCarton caja = new CajaCarton();
         caja.setCodigo(dto.getCodigo());
-        caja.setDescripcion(dto.getDescripcion());
-        caja.setMedida(dto.getMedida());
         caja.setStockActual(dto.getStockActual() != null ? dto.getStockActual() : 0);
         caja.setStockMinimo(dto.getStockMinimo() != null ? dto.getStockMinimo() : 0);
         caja.setActivo(dto.getActivo() != null ? dto.getActivo() : true);
@@ -81,8 +79,6 @@ public class CajaCartonService {
         }
 
         caja.setCodigo(dto.getCodigo());
-        caja.setDescripcion(dto.getDescripcion());
-        caja.setMedida(dto.getMedida());
         caja.setStockMinimo(dto.getStockMinimo());
         if (dto.getActivo() != null) {
             caja.setActivo(dto.getActivo());
@@ -213,8 +209,6 @@ public class CajaCartonService {
         return new CajaCartonDTO(
                 caja.getId(),
                 caja.getCodigo(),
-                caja.getDescripcion(),
-                caja.getMedida(),
                 caja.getStockActual(),
                 caja.getStockMinimo(),
                 caja.getActivo(),
@@ -227,7 +221,6 @@ public class CajaCartonService {
                 mov.getId(),
                 mov.getCajaCarton().getId(),
                 mov.getCajaCarton().getCodigo(),
-                mov.getCajaCarton().getDescripcion(),
                 mov.getTipoMovimiento(),
                 mov.getCantidad(),
                 mov.getMotivo(),

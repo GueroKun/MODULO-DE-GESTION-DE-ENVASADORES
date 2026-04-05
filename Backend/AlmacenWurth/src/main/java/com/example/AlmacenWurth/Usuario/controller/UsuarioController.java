@@ -18,7 +18,6 @@ public class UsuarioController {
         this.usuarioService = usuarioService;
     }
 
-    // Solo ADMIN crea usuarios
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN')")
@@ -30,8 +29,20 @@ public class UsuarioController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public List<UsuarioDTO> listar() {
-        return usuarioService.listar();
+    public List<UsuarioDTO> listarSinAdmins() {
+        return usuarioService.listarSinAdmins();
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public UsuarioDTO actualizar(@PathVariable Long id, @RequestBody UsuarioDTO req) {
+        return usuarioService.actualizar(id, req);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
+    public void eliminar(@PathVariable Long id) {
+        usuarioService.eliminar(id);
     }
 }
-

@@ -13,12 +13,6 @@ public class CajaCarton {
     @Column(name = "codigo", nullable = false, unique = true, length = 50)
     private String codigo;
 
-    @Column(name = "descripcion", nullable = false, length = 150)
-    private String descripcion;
-
-    @Column(name = "medida", length = 100)
-    private String medida;
-
     @Column(name = "stock_actual", nullable = false)
     private Integer stockActual;
 
@@ -31,12 +25,10 @@ public class CajaCarton {
     public CajaCarton() {
     }
 
-    public CajaCarton(Long id, String codigo, String descripcion, String medida,
-                      Integer stockActual, Integer stockMinimo, Boolean activo) {
+    public CajaCarton(Long id, String codigo, Integer stockActual, Integer stockMinimo, Boolean activo) {
         this.id = id;
         this.codigo = codigo;
-        this.descripcion = descripcion;
-        this.medida = medida;
+
         this.stockActual = stockActual;
         this.stockMinimo = stockMinimo;
         this.activo = activo;
@@ -56,22 +48,6 @@ public class CajaCarton {
 
     public void setCodigo(String codigo) {
         this.codigo = codigo;
-    }
-
-    public String getDescripcion() {
-        return descripcion;
-    }
-
-    public void setDescripcion(String descripcion) {
-        this.descripcion = descripcion;
-    }
-
-    public String getMedida() {
-        return medida;
-    }
-
-    public void setMedida(String medida) {
-        this.medida = medida;
     }
 
     public Integer getStockActual() {

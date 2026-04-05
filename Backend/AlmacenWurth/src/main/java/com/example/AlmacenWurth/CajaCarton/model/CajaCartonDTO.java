@@ -4,8 +4,6 @@ public class CajaCartonDTO {
 
     private Long id;
     private String codigo;
-    private String descripcion;
-    private String medida;
     private Integer stockActual;
     private Integer stockMinimo;
     private Boolean activo;
@@ -14,12 +12,10 @@ public class CajaCartonDTO {
     public CajaCartonDTO() {
     }
 
-    public CajaCartonDTO(Long id, String codigo, String descripcion, String medida,
-                         Integer stockActual, Integer stockMinimo, Boolean activo, Boolean stockBajo) {
+    public CajaCartonDTO(Long id, String codigo,  Integer stockActual, Integer stockMinimo, Boolean activo, Boolean stockBajo) {
         this.id = id;
         this.codigo = codigo;
-        this.descripcion = descripcion;
-        this.medida = medida;
+
         this.stockActual = stockActual;
         this.stockMinimo = stockMinimo;
         this.activo = activo;
@@ -42,21 +38,7 @@ public class CajaCartonDTO {
         this.codigo = codigo;
     }
 
-    public String getDescripcion() {
-        return descripcion;
-    }
 
-    public void setDescripcion(String descripcion) {
-        this.descripcion = descripcion;
-    }
-
-    public String getMedida() {
-        return medida;
-    }
-
-    public void setMedida(String medida) {
-        this.medida = medida;
-    }
 
     public Integer getStockActual() {
         return stockActual;

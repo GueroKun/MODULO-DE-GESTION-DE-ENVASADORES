@@ -7,7 +7,6 @@ public class MovimientoCajaCartonDTO {
     private Long id;
     private Long cajaCartonId;
     private String codigoCaja;
-    private String descripcionCaja;
     private String tipoMovimiento;
     private Integer cantidad;
     private String motivo;
@@ -19,13 +18,13 @@ public class MovimientoCajaCartonDTO {
     public MovimientoCajaCartonDTO() {
     }
 
-    public MovimientoCajaCartonDTO(Long id, Long cajaCartonId, String codigoCaja, String descripcionCaja,
+    public MovimientoCajaCartonDTO(Long id, Long cajaCartonId, String codigoCaja,
                                    String tipoMovimiento, Integer cantidad, String motivo, String referencia,
                                    LocalDateTime fechaMovimiento, Integer stockAnterior, Integer stockResultante) {
         this.id = id;
         this.cajaCartonId = cajaCartonId;
         this.codigoCaja = codigoCaja;
-        this.descripcionCaja = descripcionCaja;
+
         this.tipoMovimiento = tipoMovimiento;
         this.cantidad = cantidad;
         this.motivo = motivo;
@@ -57,14 +56,6 @@ public class MovimientoCajaCartonDTO {
 
     public void setCodigoCaja(String codigoCaja) {
         this.codigoCaja = codigoCaja;
-    }
-
-    public String getDescripcionCaja() {
-        return descripcionCaja;
-    }
-
-    public void setDescripcionCaja(String descripcionCaja) {
-        this.descripcionCaja = descripcionCaja;
     }
 
     public String getTipoMovimiento() {
