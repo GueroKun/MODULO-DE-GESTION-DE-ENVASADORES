@@ -287,6 +287,11 @@ public class EmbarqueService {
         Set<String> prefijosPermitidos = new HashSet<>();
         prefijosPermitidos.add("00040");
         prefijosPermitidos.add("00501");
+        prefijosPermitidos.add("00557");
+        prefijosPermitidos.add("00468");
+        prefijosPermitidos.add("00460");
+        prefijosPermitidos.add("00937");
+        prefijosPermitidos.add("00938");
 
         List<EmbarqueDetallePreviewDTO> registros = new ArrayList<>();
 
