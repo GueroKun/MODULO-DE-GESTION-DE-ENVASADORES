@@ -12,6 +12,7 @@ import {
   Paper,
 } from "@mui/material";
 import { Square } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
 import PageHeader from "../components/PageHeader";
 import DataTable from "../components/DataTable";
@@ -63,6 +64,7 @@ export default function ProcesoEnvasado() {
   const { items: envasadores } = useEnvasadores();
   const { items: articulos } = useProductos();
 
+  const location = useLocation();
   const [filters, setFilters] = useState({});
   const [dialogOpen, setDialogOpen] = useState(false);
   const [finalizarDialog, setFinalizarDialog] = useState(false);
@@ -101,13 +103,25 @@ export default function ProcesoEnvasado() {
     setFinalizarDialog(false);
   };
 
+  useEffect(() => {
+  if (location.state?.codigo) {
+    setFormData({
+      envasador_id: "",
+      codigo_articulo: location.state.codigo,
+      nombre_articulo: location.state.nombre,
+    });
+
+    setDialogOpen(true);
+  }
+}, [location.state]);
+
   const columns = [
     { header: "Código", accessor: "codigoProducto" },
 
     { header: "Descripción", accessor: "nombreProducto" },
 
     {
-      header: "Presentación",
+      header: "Min.Envasado",
       accessor: "minimoEnvasado",
       cell: (row) => <span>{row.minimoEnvasado} pzs</span>,
     },
@@ -116,7 +130,6 @@ export default function ProcesoEnvasado() {
 
     {
       header: "Inicio",
-      accessor: "horaInicio",
       cell: (row) => new Date(row.horaInicio).toLocaleTimeString(),
     },
 

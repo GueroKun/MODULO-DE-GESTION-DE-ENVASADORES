@@ -16,13 +16,20 @@ import { useEnvasadores } from "../hooks/useEnvasadores";
 import { useProceso } from "../hooks/useProceso";
 import { useProductos } from "../hooks/useProductos";
 
+import ConfirmDialog from "../components/ConfirmDialog";
+
+//  ALERT PROVIDER
+import { useAlert } from "../components/AlertProvider";
+
 export default function Empacadores() {
 
   const { items: envasadores, create, update, remove } = useEnvasadores();
   const { items: procesos, iniciar } = useProceso();
   const { items: articulos } = useProductos();
 
-  // 🔥 FILTROS (igual que productos)
+  const { showAlert, confirmAlert } = useAlert();
+
+  // FILTROS
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState({});
 
@@ -34,6 +41,8 @@ export default function Empacadores() {
     id: null,
     nombre: "",
   });
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
 
   const [procesoDialogOpen, setProcesoDialogOpen] = useState(false);
 
@@ -63,9 +72,8 @@ export default function Empacadores() {
 
   const handleSubmit = async () => {
     try {
-
       if (!form.nombre?.trim()) {
-        alert("El nombre es obligatorio");
+        showAlert("El nombre es obligatorio", "warning");
         return;
       }
 
@@ -74,17 +82,31 @@ export default function Empacadores() {
           id: editing.id,
           nombre: form.nombre,
         });
+        showAlert("Envasador actualizado correctamente", "success");
       } else {
         await create({
           nombre: form.nombre,
         });
+        showAlert("Envasador creado correctamente", "success");
       }
 
       closeDialog();
 
     } catch (err) {
       console.error(err);
-      alert(err.message || "Ocurrió un error");
+      showAlert(err.message || "Ocurrió un error", "error");
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await remove(selectedId);
+      showAlert("Envasador eliminado correctamente", "success");
+    } catch (err) {
+      showAlert("Error al eliminar", "error");
+    } finally {
+      setConfirmOpen(false);
+      setSelectedId(null);
     }
   };
 
@@ -104,16 +126,22 @@ export default function Empacadores() {
   const handleAsignarTarea = async (e) => {
     e.preventDefault();
 
-    await iniciar({
-      envasadorId: formProceso.envasador_id,
-      codigoProducto: formProceso.codigo_articulo,
-    });
+    try {
+      await iniciar({
+        envasadorId: formProceso.envasador_id,
+        codigoProducto: formProceso.codigo_articulo,
+      });
 
-    setProcesoDialogOpen(false);
+      showAlert("Tarea asignada correctamente", "success");
+      setProcesoDialogOpen(false);
+
+    } catch (err) {
+      showAlert(err.message || "Error al asignar tarea", "error");
+    }
   };
 
   // ==============================
-  // FILTROS (IGUAL QUE PRODUCTOS 🔥)
+  // FILTROS
   // ==============================
 
   const filteredData = useMemo(() => {
@@ -122,21 +150,17 @@ export default function Empacadores() {
 
     return envasadores
       .filter((e) => {
-
         const matchSearch =
           (e.nombre || "").toLowerCase().includes(s) ||
           String(e.id ?? "").toLowerCase().includes(s);
 
         return matchSearch;
-
       })
       .filter((e) => {
-
         return Object.keys(filters).every((key) => {
           const value = filters[key]?.toLowerCase() || "";
           return (e[key] || "").toString().toLowerCase().includes(value);
         });
-
       });
 
   }, [envasadores, search, filters]);
@@ -146,7 +170,6 @@ export default function Empacadores() {
   // ==============================
 
   const columns = [
-
     { header: "Nombre", accessor: "nombre" },
 
     {
@@ -160,6 +183,7 @@ export default function Empacadores() {
         return (
           <Box sx={{ display: "flex", gap: 1 }}>
 
+            {/* EDITAR */}
             <Tooltip title="Editar">
               <Button
                 variant="outlined"
@@ -180,14 +204,14 @@ export default function Empacadores() {
               </Button>
             </Tooltip>
 
+            {/* ELIMINAR */}
             <Tooltip title="Eliminar">
               <Button
                 size="small"
                 variant="outlined"
-                onClick={async () => {
-                  if (window.confirm("¿Seguro que deseas eliminar este envasador?")) {
-                    await remove(row.id);
-                  }
+                onClick={() => {
+                  setSelectedId(row.id);
+                  setConfirmOpen(true);
                 }}
                 sx={{
                   border: "1px solid #fecaca",
@@ -204,6 +228,7 @@ export default function Empacadores() {
               </Button>
             </Tooltip>
 
+            {/* ASIGNAR TAREA */}
             <Tooltip title={tieneTarea ? "Este envasador ya está trabajando" : "Asignar tarea"}>
               <span>
                 <Button
@@ -277,6 +302,13 @@ export default function Empacadores() {
         articulos={articulos}
       />
 
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Eliminar envasador"
+        message="¿Seguro que deseas eliminar este envasador?"
+        onConfirm={handleDelete}
+        onClose={() => setConfirmOpen(false)}
+      />
     </Box>
   );
 }

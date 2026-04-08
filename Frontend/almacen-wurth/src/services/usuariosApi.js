@@ -1,17 +1,16 @@
 import { http } from "./http";
 
-const BASE_URL = "http://localhost:8080/api/productos";
+const BASE_URL = "http://localhost:8080/api/usuarios";
 
-export const productosApi = {
+export const usuariosApi = {
   list: () => http(BASE_URL),
 
-  create: (payload) =>
-    http(BASE_URL, {
+  create: ({ nombre, password, rol }) =>
+    http(`${BASE_URL}?nombre=${encodeURIComponent(nombre)}&password=${encodeURIComponent(password)}&rol=${rol}`, {
       method: "POST",
-      body: JSON.stringify(payload),
     }),
 
-update: (id, payload) =>
+  update: (id, payload) =>
     http(`${BASE_URL}/${id}`, {
       method: "PUT",
       body: JSON.stringify(payload),

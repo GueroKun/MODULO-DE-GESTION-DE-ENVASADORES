@@ -16,9 +16,12 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 
+import { useAlert } from "../components/AlertProvider";
+
 export default function LoginScreen() {
   const navigate = useNavigate();
 
+  const { showAlert } = useAlert();
   const [nombre, setNombre] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -50,6 +53,11 @@ export default function LoginScreen() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+     if (!nombre || !password) {
+      showAlert("Ingresa usuario y contraseña", "warning");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -63,14 +71,19 @@ export default function LoginScreen() {
         .toUpperCase()
         .replace("ROLE_", "");
 
+      showAlert("Bienvenido " + (data.nombre ?? ""), "success");
+        
       if (rolNormalizado === "ADMIN") {
         navigate("/Empacadores", { replace: true });
-      } else {
+      } else if (rolNormalizado === "MONTACARGAS") {
+        navigate("/control-inventario", { replace: true });
+      }
+       else {
         navigate("/", { replace: true });
       }
     } catch (err) {
       console.error("Error login:", err?.message);
-      alert("Usuario o contraseña incorrectos");
+      showAlert(err.message || "Usuario o contraseña incorrectos", "error");
     } finally {
       setLoading(false);
     }

@@ -153,6 +153,7 @@ export default function ProcesoDialog({
                 <DialogActions>
 
                     <Button onClick={onClose}
+                        variant="outlined"
                         sx={{
                             textTransform: "none",
                             fontWeight: 500,
@@ -172,6 +173,7 @@ export default function ProcesoDialog({
                         type="submit"
                         variant="contained"
                         sx={{
+                            textTransform: "none",
                             backgroundColor: "#b91c1c",
                             "&:hover": {
                                 backgroundColor: "#991b1b",

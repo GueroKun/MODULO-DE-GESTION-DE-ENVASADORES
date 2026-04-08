@@ -1,9 +1,11 @@
-import { http } from "./http";
+// src/services/tarimas/articulosTarimaApi.js
+import { http } from "../http";
 
-const BASE_URL = "http://localhost:8080/api/productos";
+const BASE_URL = "http://localhost:8080/api/articulos-tarima";
 
-export const productosApi = {
-  list: () => http(BASE_URL),
+export const articulosTarimaApi = {
+  listByTarima: (tarimaId) =>
+    http(`${BASE_URL}/tarima/${tarimaId}`),
 
   create: (payload) =>
     http(BASE_URL, {
@@ -11,7 +13,7 @@ export const productosApi = {
       body: JSON.stringify(payload),
     }),
 
-update: (id, payload) =>
+  update: (id, payload) =>
     http(`${BASE_URL}/${id}`, {
       method: "PUT",
       body: JSON.stringify(payload),

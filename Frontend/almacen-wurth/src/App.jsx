@@ -8,79 +8,96 @@ import PrivateRoute from "./routes/PrivateRoute";
 import Empacadores from "./pages/Envasadores";
 import LoginScreen from "./pages/Login";
 import Productos from "./pages/Articulos";
-import AnalisisABC from "./pages/Analisis";
 import ProcesoEnvasado from "./pages/ProcesoEnvasado";
 import ArticulosEnvasados from "./pages/ArticulosEnvasados";
+import { AlertProvider } from "./components/AlertProvider";
+import Montacargas from "./pages/Montacargas";
+import GestionTarimas from "./pages/GestionTarimas";
+
 
 function App() {
   return (
-    <Router>
-      <CssBaseline />
-      <Routes>
+    <AlertProvider>
+      <Router>
+        <CssBaseline />
+        <Routes>
 
-        {/* LOGIN */}
-        <Route path="/" element={<LoginScreen />} />
+          {/* LOGIN */}
+          <Route path="/" element={<LoginScreen />} />
 
-        {/* RUTAS PROTEGIDAS */}
-        <Route
-          path="/empacadores"
-          element={
-            <PrivateRoute>
-              <Layout currentPageName="Empacadores">
-                <Empacadores />
-              </Layout>
-            </PrivateRoute>
-          }
-        />
-
-        <Route
-          path="/articulos"
-          element={
-            <PrivateRoute>
-              <Layout currentPageName="Articulos">
-                <Productos />
-              </Layout>
-            </PrivateRoute>
-          }
-        />
-
-        <Route
-          path="/analisis"
-          element={
-            <PrivateRoute>
-              <Layout currentPageName="Analisis">
-                <AnalisisABC />
-              </Layout>
-            </PrivateRoute>
-          }
-        />
+          {/* RUTAS PROTEGIDAS */}
+          <Route
+            path="/empacadores"
+            element={
+              <PrivateRoute roles={["ADMIN", "MONTACARGAS"]}>
+                <Layout currentPageName="Empacadores">
+                  <Empacadores />
+                </Layout>
+              </PrivateRoute>
+            }
+          />
 
           <Route
-          path="/proceso-envasado"
-          element={
-            <PrivateRoute>
-              <Layout currentPageName="ProcesoEnvasado">
-                <ProcesoEnvasado />
-              </Layout>
-            </PrivateRoute>
-          }
-        />
+            path="/articulos"
+            element={
+              <PrivateRoute roles={["ADMIN", "MONTACARGAS"]}>
+                <Layout currentPageName="Articulos">
+                  <Productos />
+                </Layout>
+              </PrivateRoute>
+            }
+          />
 
-         <Route
-          path="/articulos-envasados"
-          element={
-            <PrivateRoute>
-              <Layout currentPageName="ArticulosEnvasados">
-                <ArticulosEnvasados />
-              </Layout>
-            </PrivateRoute>
-          }
-        />
+          <Route
+            path="/proceso-envasado"
+            element={
+              <PrivateRoute roles={["ADMIN", "MONTACARGAS"]}>
+                <Layout currentPageName="ProcesoEnvasado">
+                  <ProcesoEnvasado />
+                </Layout>
+              </PrivateRoute>
+            }
+          />
 
-        <Route path="*" element={<PageNotFound />} />
+          <Route
+            path="/articulos-envasados"
+            element={
+              <PrivateRoute roles={["ADMIN", "MONTACARGAS"]}>
+                <Layout currentPageName="ArticulosEnvasados">
+                  <ArticulosEnvasados />
+                </Layout>
+              </PrivateRoute>
+            }
+          />
 
-      </Routes>
-    </Router>
+          <Route
+            path="/montacargas"
+            element={
+              <PrivateRoute roles={["ADMIN"]}>
+                <Layout currentPageName="Montacargas">
+                  <Montacargas />
+                </Layout>
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/control-inventario"
+            element={
+              <PrivateRoute roles={["MONTACARGAS"]}>
+                <Layout currentPageName="ControlInventario">
+                  <GestionTarimas />
+                </Layout>
+              </PrivateRoute>
+            }
+          />
+
+
+          <Route path="*" element={<PageNotFound />} />
+
+        </Routes>
+      </Router>
+    </AlertProvider>
   );
 }
 

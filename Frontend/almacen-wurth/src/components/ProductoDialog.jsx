@@ -28,10 +28,11 @@ export default function ProductoDialog({
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // Limites de caracteres
+    // Limites de caracteres 
     const limits = {
       codigo: 20,
       nombre: 50,
+      ubicacionArticulo: 10, 
     };
 
     if (limits[name] && value.length > limits[name]) {
@@ -95,7 +96,7 @@ export default function ProductoDialog({
               flex: 1,
             }}
           >
-            Nuevo Artículo
+            {formData.id ? "Editar Artículo" : "Nuevo Artículo"}
           </Typography>
           <IconButton
             onClick={onClose}
@@ -197,7 +198,29 @@ export default function ProductoDialog({
                 }}
               />
             </Grid>
-
+            {/* ===== NUEVA FILA: UBICACIÓN ===== */}
+            <Grid size={12}>
+              <Typography component="label" sx={{ display: "block", fontSize: "0.875rem", fontWeight: 500, color: "#374151", mb: 0.5 }}>
+                Ubicación del Artículo
+              </Typography>
+              <TextField
+                name="ubicacionArticulo"
+                value={formData.ubicacionArticulo || ""}
+                onChange={handleChange}
+                fullWidth
+                placeholder="Ej: M01-001-1"
+                variant="outlined"
+                size="small"
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "#fff",
+                    "& fieldset": { borderColor: "#e5e7eb" },
+                    "&:hover fieldset": { borderColor: "#d1d5db" },
+                    "&.Mui-focused fieldset": { borderColor: "#b91c1c", borderWidth: "1px" },
+                  },
+                }}
+              />
+            </Grid>
             {/* ===== Fila 3 (3 inputs en una fila) ===== */}
             <Grid container size={12} spacing={2}>
               <Grid size={{ xs: 12, sm: 4 }}>
@@ -213,7 +236,7 @@ export default function ProductoDialog({
                   placeholder="0"
                   variant="outlined"
                   size="small"
-                  inputProps={{ min: 0 }}
+                  inputProps={{ min: 1 }}
                   sx={{
                     "& .MuiOutlinedInput-root": {
                       backgroundColor: "#fff",
@@ -322,7 +345,7 @@ export default function ProductoDialog({
               },
             }}
           >
-            Crear artículo
+            {formData.id ? "Actualizar" : "Crear artículo"}
           </Button>
         </DialogActions>
       </Box>

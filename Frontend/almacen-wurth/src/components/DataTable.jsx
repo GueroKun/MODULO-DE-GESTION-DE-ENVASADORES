@@ -11,6 +11,8 @@ import {
   Box,
   IconButton,
   TextField,
+  Select,
+  MenuItem,
 } from "@mui/material";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -23,31 +25,26 @@ export default function DataTable({
   currentPage = 1,
   totalPages = 1,
   onPageChange,
+  rowsPerPage = 10,
+  onRowsPerPageChange,
   emptyMessage = "No hay datos disponibles",
 }) {
 
   const handleFilterChange = (key, value) => {
-
     if (onFilterChange) {
-
       onFilterChange({
         ...filters,
         [key]: value,
       });
-
     }
   };
 
   return (
     <Paper sx={{ borderRadius: 3, overflow: "hidden", boxShadow: 1 }}>
-
       <TableContainer>
-
         <Table>
-
           {/* HEADER */}
           <TableHead sx={{ bgcolor: "#f8fafc" }}>
-
             <TableRow>
               {columns.map((col, idx) => (
                 <TableCell
@@ -64,6 +61,7 @@ export default function DataTable({
               ))}
             </TableRow>
 
+            {/* FILTROS */}
             <TableRow>
               {columns.map((col, idx) => (
                 <TableCell key={idx} sx={{ py: 1 }}>
@@ -82,14 +80,11 @@ export default function DataTable({
                 </TableCell>
               ))}
             </TableRow>
-
           </TableHead>
 
           {/* BODY */}
           <TableBody>
-
             {data.length === 0 ? (
-
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
@@ -101,38 +96,27 @@ export default function DataTable({
                   </Typography>
                 </TableCell>
               </TableRow>
-
             ) : (
-
               data.map((row, rowIdx) => (
-
                 <TableRow
                   key={rowIdx}
                   hover
                   sx={{ "&:last-child td": { borderBottom: 0 } }}
                 >
-
                   {columns.map((col, colIdx) => (
                     <TableCell key={colIdx}>
                       {col.cell ? col.cell(row) : row[col.accessor]}
                     </TableCell>
                   ))}
-
                 </TableRow>
-
               ))
-
             )}
-
           </TableBody>
-
         </Table>
-
       </TableContainer>
 
       {/* PAGINACIÓN */}
-      {totalPages > 1 && (
-
+      {totalPages > 0 && (
         <Box
           sx={{
             px: 2,
@@ -144,13 +128,29 @@ export default function DataTable({
             bgcolor: "#f8fafc",
           }}
         >
+          {/* FILAS POR PÁGINA */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Typography variant="body2" color="text.secondary">
+              Filas por página:
+            </Typography>
 
-          <Typography variant="body2" color="text.secondary">
-            Página {currentPage} de {totalPages}
-          </Typography>
+            <Select
+              size="small"
+              value={rowsPerPage}
+              onChange={(e) => onRowsPerPageChange(e.target.value)}
+            >
+              <MenuItem value={10}>10</MenuItem>
+              <MenuItem value={20}>20</MenuItem>
+              <MenuItem value={50}>50</MenuItem>
+              <MenuItem value={100}>100</MenuItem>
+            </Select>
+          </Box>
 
-          <Box>
-
+          {/* BOTONES + PAGINA */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+               {currentPage} / {totalPages}
+            </Typography>
             <IconButton
               onClick={() => onPageChange(currentPage - 1)}
               disabled={currentPage === 1}
@@ -164,13 +164,9 @@ export default function DataTable({
             >
               <ChevronRight size={18} />
             </IconButton>
-
           </Box>
-
         </Box>
-
       )}
-
     </Paper>
   );
 }

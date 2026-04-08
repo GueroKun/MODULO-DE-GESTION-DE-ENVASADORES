@@ -1,15 +1,14 @@
-// src/hooks/useProductos.js
 import { useCallback, useEffect, useState } from "react";
-import { productosApi } from "../services/productosApi";
+import { usuariosApi } from "../services/usuariosApi";
 
-export function useProductos() {
+export function useUsuarios() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const reload = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await productosApi.list();
+      const data = await usuariosApi.list();
       setItems(Array.isArray(data) ? data : []);
     } finally {
       setLoading(false);
@@ -21,19 +20,19 @@ export function useProductos() {
   }, [reload]);
 
   const create = async (payload) => {
-    await productosApi.create(payload);
+    await usuariosApi.create(payload);
     await reload();
   };
 
   const update = async (id, payload) => {
-      await productosApi.update(id, payload);
-      await reload();
-    };
-  
-    const remove = async (id) => {
-      await productosApi.remove(id);
-      await reload();
-    };
+    await usuariosApi.update(id, payload);
+    await reload();
+  };
 
-  return { items, loading, reload, create,  update, remove};
+  const remove = async (id) => {
+    await usuariosApi.remove(id);
+    await reload();
+  };
+
+  return { items, loading, reload, create, update, remove };
 }
