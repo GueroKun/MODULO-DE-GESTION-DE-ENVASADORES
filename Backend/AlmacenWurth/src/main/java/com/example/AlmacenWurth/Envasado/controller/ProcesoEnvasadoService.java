@@ -25,39 +25,75 @@ public class ProcesoEnvasadoService {
 
     public ProcesoEnvasadoService(ProcesoEnvasadoRepository repo,
                                   EnvasadorService envasadorService,
-                                  ProductoService productoService, ProductoRepository productoRepository) {
+                                  ProductoService productoService,
+                                  ProductoRepository productoRepository) {
         this.repo = repo;
         this.envasadorService = envasadorService;
         this.productoService = productoService;
         this.productoRepository = productoRepository;
     }
 
-    // Iniciar proceso
     @Transactional
-    public ProcesoEnvasadoDTO iniciar(Long envasadorId, String codigoProducto) {
-        if (envasadorId == null) throw new IllegalArgumentException("envasadorId requerido");
-        if (codigoProducto == null || codigoProducto.isBlank()) throw new IllegalArgumentException("codigoProducto requerido");
+    public ProcesoEnvasadoDTO iniciar(Long envasadorId,
+                                      String codigoProducto,
+                                      Integer cantidadAsignada,
+                                      Integer minimoEnvasado) {
+
+        if (envasadorId == null) {
+            throw new IllegalArgumentException("envasadorId requerido");
+        }
+
+        if (codigoProducto == null || codigoProducto.isBlank()) {
+            throw new IllegalArgumentException("codigoProducto requerido");
+        }
+
+        if (cantidadAsignada == null || cantidadAsignada <= 0) {
+            throw new IllegalArgumentException("cantidadAsignada requerida y mayor a 0");
+        }
+
+        if (minimoEnvasado == null || minimoEnvasado <= 0) {
+            throw new IllegalArgumentException("minimoEnvasado requerido y mayor a 0");
+        }
+
+        if (cantidadAsignada % minimoEnvasado != 0) {
+            throw new IllegalArgumentException("La cantidad asignada debe dividirse exactamente entre el mínimo de envasado");
+        }
 
         Envasador envasador = envasadorService.obtenerOrThrow(envasadorId);
 
         Producto producto = productoRepository.findByCodigoForUpdate(codigoProducto.trim())
                 .orElseThrow(() -> new NotFoundException("Producto no encontrado: " + codigoProducto));
 
-        if (producto.getEstado() != Producto.Estado.PENDIENTE) {
-            throw new IllegalArgumentException("Solo se puede iniciar si el producto está PENDIENTE. Estado actual: " + producto.getEstado());
+        Integer totalUnidades = producto.getTotalUnidades();
+        if (totalUnidades == null) {
+            totalUnidades = 0;
         }
 
-        if (repo.existsByProductoIdAndHoraFinIsNull(producto.getId())) {
-            throw new IllegalArgumentException("Ya existe un proceso activo para este producto.");
+        if (totalUnidades <= 0) {
+            throw new IllegalArgumentException("El producto no tiene unidades disponibles para asignar");
         }
 
-        // (Opcional) evitar que el envasador tenga 2 activos
+        Integer cantidadYaAsignada = repo.sumarCantidadAsignadaActivaPorProducto(producto.getId());
+        if (cantidadYaAsignada == null) {
+            cantidadYaAsignada = 0;
+        }
+
+        int disponibleParaAsignar = totalUnidades - cantidadYaAsignada;
+
+        if (disponibleParaAsignar <= 0) {
+            throw new IllegalArgumentException("Ya no hay unidades disponibles para asignar en este producto");
+        }
+
+        if (cantidadAsignada > disponibleParaAsignar) {
+            throw new IllegalArgumentException(
+                    "La cantidad asignada supera lo disponible para este producto. Disponible: " + disponibleParaAsignar
+            );
+        }
+
+        // Opcional: descomenta si quieres evitar que un envasador tenga dos procesos activos al mismo tiempo
         // if (repo.existsByEnvasadorIdAndHoraFinIsNull(envasadorId)) {
         //     throw new IllegalArgumentException("El envasador ya tiene un proceso activo.");
         // }
-
-        producto.setEstado(Producto.Estado.EN_PROCESO);
-        productoRepository.save(producto);
 
         ProcesoEnvasado p = new ProcesoEnvasado();
         p.setEnvasador(envasador);
@@ -65,14 +101,19 @@ public class ProcesoEnvasadoService {
         p.setNombreEnvasador(envasador.getNombre());
         p.setCodigoProducto(producto.getCodigo());
         p.setNombreProducto(producto.getNombre());
-        p.setMinimoEnvasado(producto.getMinimoEnvasado());
+        p.setMinimoEnvasado(minimoEnvasado);
+        p.setCantidadAsignada(cantidadAsignada);
+        p.setCantidadPaquetes(cantidadAsignada / minimoEnvasado);
         p.setHoraInicio(LocalDateTime.now());
+
+        if (producto.getEstado() == Producto.Estado.PENDIENTE) {
+            producto.setEstado(Producto.Estado.EN_PROCESO);
+            productoRepository.save(producto);
+        }
 
         return toDTO(repo.save(p));
     }
 
-
-    // Finalizar proceso
     @Transactional
     public ProcesoEnvasadoDTO finalizar(Long procesoId) {
         ProcesoEnvasado p = repo.findById(procesoId)
@@ -82,30 +123,30 @@ public class ProcesoEnvasadoService {
             throw new IllegalArgumentException("El proceso ya está finalizado");
         }
 
-        Producto producto = p.getProducto();
+        Producto producto = productoRepository.findById(p.getProducto().getId())
+                .orElseThrow(() -> new NotFoundException("Producto no encontrado"));
 
-        Integer totalUnidadesActual = producto.getTotalUnidades();
-        if (totalUnidadesActual == null) {
-            totalUnidadesActual = 0;
+        int totalUnidadesActual = producto.getTotalUnidades() != null ? producto.getTotalUnidades() : 0;
+        int stockActual = producto.getStockActual() != null ? producto.getStockActual() : 0;
+        int cantidadEnvasada = p.getCantidadAsignada() != null ? p.getCantidadAsignada() : 0;
+
+        if (cantidadEnvasada <= 0) {
+            throw new IllegalArgumentException("El proceso no tiene una cantidad asignada válida");
         }
 
-        if (totalUnidadesActual <= 0) {
-            throw new IllegalArgumentException("El producto no tiene unidades pendientes por envasar");
+        if (totalUnidadesActual < cantidadEnvasada) {
+            throw new IllegalArgumentException("El producto no tiene suficientes unidades para finalizar este proceso");
         }
-
-        Integer stockActual = producto.getStockActual();
-        if (stockActual == null) {
-            stockActual = 0;
-        }
-
-
-        int cantidadEnvasada = totalUnidadesActual;
 
         producto.setStockActual(stockActual + cantidadEnvasada);
-        producto.setTotalUnidades(0);
-        producto.setEstado(Producto.Estado.FINALIZADO);
+        producto.setTotalUnidades(totalUnidadesActual - cantidadEnvasada);
 
-        // Guardar cuánto se envasó en este proceso
+        if (producto.getTotalUnidades() == 0) {
+            producto.setEstado(Producto.Estado.FINALIZADO);
+        } else {
+            producto.setEstado(Producto.Estado.EN_PROCESO);
+        }
+
         p.setCantidadEnvasada(cantidadEnvasada);
         p.setHoraFin(LocalDateTime.now());
 
@@ -115,7 +156,10 @@ public class ProcesoEnvasadoService {
 
     @Transactional(readOnly = true)
     public List<ProcesoEnvasadoDTO> enProceso() {
-        return repo.findByHoraFinIsNullOrderByHoraInicioAsc().stream().map(this::toDTO).toList();
+        return repo.findByHoraFinIsNullOrderByHoraInicioAsc()
+                .stream()
+                .map(this::toDTO)
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -136,24 +180,30 @@ public class ProcesoEnvasadoService {
     private ProcesoEnvasadoDTO toDTO(ProcesoEnvasado p) {
         ProcesoEnvasadoDTO dto = new ProcesoEnvasadoDTO();
         dto.setId(p.getId());
+
         if (p.getEnvasador() != null) {
             dto.setEnvasadorId(p.getEnvasador().getId());
             dto.setEnvasadorNombre(p.getEnvasador().getNombre());
         } else {
             dto.setEnvasadorNombre(p.getNombreEnvasador());
         }
+
         if (p.getProducto() != null) {
             dto.setCodigoProducto(p.getProducto().getCodigo());
             dto.setNombreProducto(p.getProducto().getNombre());
         } else {
             dto.setCodigoProducto(p.getCodigoProducto());
             dto.setNombreProducto(p.getNombreProducto());
-        };
+        }
+
         dto.setMinimoEnvasado(p.getMinimoEnvasado());
+        dto.setCantidadAsignada(p.getCantidadAsignada());
+        dto.setCantidadEnvasada(p.getCantidadEnvasada());
+        dto.setCantidadPaquetes(p.getCantidadPaquetes());
         dto.setHoraInicio(p.getHoraInicio());
         dto.setHoraFin(p.getHoraFin());
         dto.setTiempoTranscurridoSegundos(p.getTiempoTranscurridoSegundos());
-        dto.setCantidadEnvasada(p.getCantidadEnvasada());
+
         return dto;
     }
 }

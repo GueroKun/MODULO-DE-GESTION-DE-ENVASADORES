@@ -1,5 +1,6 @@
 package com.example.AlmacenWurth.Envasado.controller;
 
+import com.example.AlmacenWurth.Envasado.model.IniciarProcesoRequestDTO;
 import com.example.AlmacenWurth.Envasado.model.ProcesoEnvasadoDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,30 +21,35 @@ public class ProcesoEnvasadoController {
     @PostMapping("/iniciar")
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('ENVASADOR','ADMIN')")
-    public ProcesoEnvasadoDTO iniciar(@RequestBody com.example.AlmacenWurth.Envasado.model.IniciarProcesoRequestDTO req) {
-        return service.iniciar(req.getEnvasadorId(), req.getCodigoProducto());
+    public ProcesoEnvasadoDTO iniciar(@RequestBody IniciarProcesoRequestDTO req) {
+        return service.iniciar(
+                req.getEnvasadorId(),
+                req.getCodigoProducto(),
+                req.getCantidadAsignada(),
+                req.getMinimoEnvasado()
+        );
     }
 
     @PutMapping("/{id}/finalizar")
-    @PreAuthorize("hasAnyRole('ENVASADOR','ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     public ProcesoEnvasadoDTO finalizar(@PathVariable Long id) {
         return service.finalizar(id);
     }
 
     @GetMapping("/en-proceso")
-    @PreAuthorize("hasAnyRole('ENVASADOR','ADMIN','MONTACARGAS')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     public List<ProcesoEnvasadoDTO> enProceso() {
         return service.enProceso();
     }
 
-    // NUEVO
     @GetMapping("/finalizados")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     public List<ProcesoEnvasadoDTO> finalizados() {
         return service.finalizados();
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ENVASADOR','ADMIN','MONTACARGAS')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     public ProcesoEnvasadoDTO obtener(@PathVariable Long id) {
         return service.obtener(id);
     }

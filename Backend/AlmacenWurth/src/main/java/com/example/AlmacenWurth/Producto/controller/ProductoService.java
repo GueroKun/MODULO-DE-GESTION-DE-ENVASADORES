@@ -32,7 +32,6 @@ public class ProductoService {
         if (req.getUbicacionArticulo() == null || req.getUbicacionArticulo().isBlank()) throw new IllegalArgumentException("ubicacionArticulo requerido");
         if (req.getEstado() == null || req.getEstado().isBlank()) throw new IllegalArgumentException("estado requerido");
 
-
         String codigo = req.getCodigo().trim();
         if (productoRepository.existsByCodigo(codigo)) throw new IllegalArgumentException("Ya existe producto con codigo: " + codigo);
 
@@ -45,7 +44,6 @@ public class ProductoService {
         p.setUbicacionArticulo(req.getUbicacionArticulo().trim());
         p.setEstado(Producto.Estado.valueOf(req.getEstado().trim()));
         p.setPrioridad(Producto.Prioridad.valueOf(req.getPrioridad().trim()));
-
         return toDTO(productoRepository.save(p));
     }
 
@@ -55,7 +53,7 @@ public class ProductoService {
     }
 
     @Transactional(readOnly = true)
-    public Producto obtenerPorCodigoOrThrow(String codigo) {
+    public Producto obtenerPorCodigo(String codigo) {
         return productoRepository.findByCodigo(codigo)
                 .orElseThrow(() -> new NotFoundException("Producto no encontrado: " + codigo));
     }
@@ -82,7 +80,6 @@ public class ProductoService {
         Producto p = productoRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Producto no encontrado: " + id));
 
-        // Validaciones mínimas (puedes hacerlas estrictas como en crear)
         if (req.getCodigo() != null && !req.getCodigo().isBlank()) {
             String nuevoCodigo = req.getCodigo().trim();
             if (!nuevoCodigo.equals(p.getCodigo()) && productoRepository.existsByCodigo(nuevoCodigo)) {
@@ -90,38 +87,28 @@ public class ProductoService {
             }
             p.setCodigo(nuevoCodigo);
         }
-
-        if (req.getNombre() != null && !req.getNombre().isBlank()) {
-            p.setNombre(req.getNombre().trim());
-        }
-
+        if (req.getNombre() != null && !req.getNombre().isBlank()) {p.setNombre(req.getNombre().trim());}
         if (req.getTotalUnidades() != null) {
             if (req.getTotalUnidades() < 0) throw new IllegalArgumentException("totalUnidades >= 0");
             p.setTotalUnidades(req.getTotalUnidades());
         }
-
         if (req.getStockActual() != null) {
             if (req.getStockActual() < 0) throw new IllegalArgumentException("stockActual >= 0");
             p.setStockActual(req.getStockActual());
         }
-
         if (req.getMinimoEnvasado() != null) {
             if (req.getMinimoEnvasado() <= 0) throw new IllegalArgumentException("minimoEnvasado > 0");
             p.setMinimoEnvasado(req.getMinimoEnvasado());
         }
-
         if (req.getUbicacionArticulo() != null && !req.getUbicacionArticulo().isBlank()) {
             p.setUbicacionArticulo(req.getUbicacionArticulo().trim());
         }
-
         if (req.getEstado() != null && !req.getEstado().isBlank()) {
             p.setEstado(Producto.Estado.valueOf(req.getEstado().trim()));
         }
-
         if (req.getPrioridad() != null && !req.getPrioridad().isBlank()) {
             p.setPrioridad(Producto.Prioridad.valueOf(req.getPrioridad().trim()));
         }
-
         return toDTO(productoRepository.save(p));
     }
 

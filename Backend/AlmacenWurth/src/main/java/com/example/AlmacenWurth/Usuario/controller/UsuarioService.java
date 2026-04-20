@@ -41,7 +41,8 @@ public class UsuarioService {
 
     @Transactional(readOnly = true)
     public List<UsuarioDTO> listar() {
-        return usuarioRepository.findAll().stream().map(this::toDTO).toList();
+        return usuarioRepository.findAll()
+                .stream().map(this::toDTO).toList();
     }
 
     @Transactional(readOnly = true)
@@ -66,44 +67,28 @@ public class UsuarioService {
 
     @Transactional
     public UsuarioDTO actualizar(Long id, UsuarioDTO req) {
-        if (id == null) {
-            throw new IllegalArgumentException("id es requerido");
-        }
-        if (req == null) {
-            throw new IllegalArgumentException("body es requerido");
-        }
+        if (id == null) {throw new IllegalArgumentException("id es requerido");}
+        if (req == null) {throw new IllegalArgumentException("body es requerido");}
 
         Usuario usuario = obtenerPorIdOrThrow(id);
 
         if (req.getNombre() != null && !req.getNombre().isBlank()) {
             String nuevoNombre = req.getNombre().trim();
-
             if (!nuevoNombre.equals(usuario.getNombre()) && usuarioRepository.existsByNombre(nuevoNombre)) {
                 throw new IllegalArgumentException("Ya existe el usuario: " + nuevoNombre);
             }
-
             usuario.setNombre(nuevoNombre);
         }
+        if (req.getPassword() != null && !req.getPassword().isBlank()) {usuario.setPasswordHash(passwordEncoder.encode(req.getPassword().trim()));}
 
-        if (req.getPassword() != null && !req.getPassword().isBlank()) {
-            usuario.setPasswordHash(passwordEncoder.encode(req.getPassword().trim()));
-        }
-
-        if (req.getRol() != null && !req.getRol().isBlank()) {
-            usuario.setRol(Rol.valueOf(req.getRol().trim().toUpperCase()));
-        }
-
+        if (req.getRol() != null && !req.getRol().isBlank()) {usuario.setRol(Rol.valueOf(req.getRol().trim().toUpperCase()));}
         return toDTO(usuarioRepository.save(usuario));
     }
 
     @Transactional
     public void eliminar(Long id) {
         Usuario usuario = obtenerPorIdOrThrow(id);
-
-        if (usuario.getRol() == Rol.ADMIN) {
-            throw new IllegalArgumentException("No se puede eliminar un usuario ADMIN");
-        }
-
+        if (usuario.getRol() == Rol.ADMIN) {throw new IllegalArgumentException("No se puede eliminar un usuario ADMIN");}
         usuarioRepository.delete(usuario);
     }
 
