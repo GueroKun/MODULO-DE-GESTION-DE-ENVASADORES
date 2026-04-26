@@ -6,7 +6,7 @@ import {
 } from "@mui/material";
 import CircularProgress from "@mui/material/CircularProgress";
 import { Square } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { useAlert } from "../components/AlertProvider";
 
@@ -64,6 +64,7 @@ export default function ProcesoEnvasado() {
   const { showAlert } = useAlert();
 
   const location = useLocation();
+  const navigate = useNavigate();
   const [filters, setFilters] = useState({});
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -150,6 +151,7 @@ export default function ProcesoEnvasado() {
       });
 
       setDialogOpen(true);
+      navigate(location.pathname, { replace: true });
     }
   }, [location.state]);
 
