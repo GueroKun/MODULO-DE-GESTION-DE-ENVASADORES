@@ -13,6 +13,7 @@ import ArticulosEnvasados from "./pages/ArticulosEnvasados";
 import { AlertProvider } from "./components/AlertProvider";
 import Montacargas from "./pages/Montacargas";
 import GestionTarimas from "./pages/GestionTarimas";
+import Cajas from "./pages/Cajas";
 
 
 function App() {
@@ -87,6 +88,17 @@ function App() {
               <PrivateRoute roles={["MONTACARGAS"]}>
                 <Layout currentPageName="ControlInventario">
                   <GestionTarimas />
+                </Layout>
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/cajas"
+            element={
+              <PrivateRoute roles={["ADMIN"]}>
+                <Layout currentPageName="Cajas">
+                  <Cajas />
                 </Layout>
               </PrivateRoute>
             }

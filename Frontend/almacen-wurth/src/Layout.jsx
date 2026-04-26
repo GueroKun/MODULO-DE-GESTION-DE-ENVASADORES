@@ -34,7 +34,8 @@ const navItems = [
   { name: "Proceso de Envasado", path: "/proceso-envasado", page: "ProcesoEnvasado", icon: PackageOpen, roles: ["ADMIN"] },
   { name: "Artículos Envasados", path: "/articulos-envasados", page: "ArticulosEnvasados", icon: History, roles: ["ADMIN"] },
   { name: "Montacargas", path: "/montacargas", page: "Montacargas", icon: Forklift, roles: ["ADMIN"] },
-  { name: "Control de Inventarios", path: "/control-inventario", page: "ControlInventario", icon: Boxes, roles: ["MONTACARGAS"] }
+  { name: "Control de Inventarios", path: "/control-inventario", page: "ControlInventario", icon: Boxes, roles: ["MONTACARGAS"] },
+  { name: "Gestor de Cajas", path: "/cajas", page: "Cajas", icon: Boxes, roles: ["ADMIN"] }
 ];
 
 export default function Layout({ children, currentPageName }) {
