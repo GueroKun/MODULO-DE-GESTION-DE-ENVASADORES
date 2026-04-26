@@ -33,7 +33,6 @@ export default function Productos() {
   const [excelOpen, setExcelOpen] = useState(false);
   const [editingProducto, setEditingProducto] = useState(null);
 
-  // 🔴 Confirmación eliminar
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [selectedProducto, setSelectedProducto] = useState(null);
 
@@ -214,17 +213,14 @@ export default function Productos() {
           <Box sx={{ display: "flex", gap: 1 }}>
             <Tooltip title={row.estado === "FINALIZADO"
               ? "Artículo finalizado"
-              : row.estado === "EN_PROCESO"
-                ? "Artículo en proceso"
-                : "Asignar tarea"
+              : "Asignar tarea"
             }>
               <span>
                 <Button
                   size="small"
                   variant="outlined"
                   disabled={
-                    row.estado === "FINALIZADO" ||
-                    row.estado === "EN_PROCESO"
+                    row.estado === "FINALIZADO" 
                   }
                   onClick={() =>
                     navigate("/proceso-envasado", {

@@ -54,7 +54,7 @@ export default function ArticulosTarimaDialog({
 
       <DialogContent>
         {modo === "agregar" && (
-          <Box component="form" onSubmit={handleAgregar} mb={2}>
+          <Box component="form" onSubmit={handleAgregar} mb={2} p={2}>
             <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2}>
               <TextField
                 label="Código de Artículo"

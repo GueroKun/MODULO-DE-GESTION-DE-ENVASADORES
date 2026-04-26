@@ -15,7 +15,7 @@ import {
   MenuItem,
 } from "@mui/material";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ClipboardList  } from "lucide-react";
 
 export default function DataTable({
   columns,
@@ -89,8 +89,9 @@ export default function DataTable({
                 <TableCell
                   colSpan={columns.length}
                   align="center"
-                  sx={{ py: 6 }}
+                  sx={{ py: 5,  opacity: 0.4}}
                 >
+                  <ClipboardList size={48} color="#94a3b8" />
                   <Typography color="text.secondary">
                     {emptyMessage}
                   </Typography>

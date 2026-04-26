@@ -65,10 +65,6 @@ export default function ArticulosEnvasados() {
 
   }, [filteredData, currentPage]);
 
-  // ==============================
-  // HELPERS
-  // ==============================
-
   const formatTiempo = (segundos) => {
     if (!segundos) return "-";
 
@@ -77,10 +73,6 @@ export default function ArticulosEnvasados() {
 
     return `${horas}h ${mins}m`;
   };
-
-  // ==============================
-  // COLUMNAS
-  // ==============================
 
   const columns = [
     {

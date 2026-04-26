@@ -18,7 +18,6 @@ import { useProductos } from "../hooks/useProductos";
 
 import ConfirmDialog from "../components/ConfirmDialog";
 
-//  ALERT PROVIDER
 import { useAlert } from "../components/AlertProvider";
 
 export default function Empacadores() {
@@ -27,7 +26,7 @@ export default function Empacadores() {
   const { items: procesos, iniciar } = useProceso();
   const { items: articulos } = useProductos();
 
-  const { showAlert, confirmAlert } = useAlert();
+  const { showAlert } = useAlert();
 
   // FILTROS
   const [search, setSearch] = useState("");
@@ -47,9 +46,11 @@ export default function Empacadores() {
   const [procesoDialogOpen, setProcesoDialogOpen] = useState(false);
 
   const [formProceso, setFormProceso] = useState({
-    envasador_id: "",
     codigo_articulo: "",
     nombre_articulo: "",
+    asignaciones: [
+      { envasador_id: "", cantidad: "", presentacion: "" },
+    ],
   });
 
   // ==============================
@@ -93,7 +94,6 @@ export default function Empacadores() {
       closeDialog();
 
     } catch (err) {
-      console.error(err);
       showAlert(err.message || "Ocurrió un error", "error");
     }
   };
@@ -115,22 +115,42 @@ export default function Empacadores() {
   // ==============================
 
   const abrirAsignarTarea = (row) => {
-    setFormProceso({
-      envasador_id: row.id,
-      codigo_articulo: "",
-      nombre_articulo: "",
-    });
-    setProcesoDialogOpen(true);
-  };
+  setFormProceso({
+    codigo_articulo: "",
+    nombre_articulo: "",
+    asignaciones: [
+      {
+        envasador_id: row.id,
+        cantidad: "",
+        presentacion: "",
+      },
+    ],
+  });
+
+  setProcesoDialogOpen(true);
+};
 
   const handleAsignarTarea = async (e) => {
     e.preventDefault();
 
     try {
-      await iniciar({
-        envasadorId: formProceso.envasador_id,
-        codigoProducto: formProceso.codigo_articulo,
-      });
+      for (const asignacion of formProceso.asignaciones) {
+        if (
+          !asignacion.envasador_id ||
+          !asignacion.cantidad ||
+          !asignacion.presentacion
+        ) {
+          showAlert("Completa todos los campos", "warning");
+          return;
+        }
+
+        await iniciar({
+          envasadorId: asignacion.envasador_id,
+          codigoProducto: formProceso.codigo_articulo,
+          cantidadAsignada: parseInt(asignacion.cantidad),
+          minimoEnvasado: parseInt(asignacion.presentacion),
+        });
+      }
 
       showAlert("Tarea asignada correctamente", "success");
       setProcesoDialogOpen(false);
@@ -298,7 +318,7 @@ export default function Empacadores() {
         formData={formProceso}
         setFormData={setFormProceso}
         envasadoresActivos={envasadores}
-        envasadoresConTarea={[]}
+        envasadoresConTarea={procesos.map(p => p.envasadorId)}
         articulos={articulos}
       />
 

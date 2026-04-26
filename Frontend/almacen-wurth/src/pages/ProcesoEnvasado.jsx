@@ -2,17 +2,13 @@ import React, { useState, useEffect, useMemo } from "react";
 import {
   Box,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Typography,
-  Stack,
   Chip,
-  Paper,
 } from "@mui/material";
+import CircularProgress from "@mui/material/CircularProgress";
 import { Square } from "lucide-react";
 import { useLocation } from "react-router-dom";
+
+import { useAlert } from "../components/AlertProvider";
 
 import PageHeader from "../components/PageHeader";
 import DataTable from "../components/DataTable";
@@ -64,80 +60,118 @@ export default function ProcesoEnvasado() {
   const { items: envasadores } = useEnvasadores();
   const { items: articulos } = useProductos();
 
+  const [loadingFinalizarId, setLoadingFinalizarId] = useState(null);
+  const { showAlert } = useAlert();
+
   const location = useLocation();
   const [filters, setFilters] = useState({});
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [finalizarDialog, setFinalizarDialog] = useState(false);
-  const [procesoSeleccionado, setProcesoSeleccionado] = useState(null);
 
   const [formData, setFormData] = useState({
-    envasador_id: "",
     codigo_articulo: "",
     nombre_articulo: "",
+    asignaciones: [],
   });
 
   const tareasEnProceso = procesos;
   const envasadoresActivos = envasadores;
-
   const envasadoresConTarea = tareasEnProceso.map((t) => t.envasadorId);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    await iniciar({
-      envasadorId: formData.envasador_id,
-      codigoProducto: formData.codigo_articulo,
-    });
+    if (!formData.asignaciones || formData.asignaciones.length === 0) {
+      showAlert("Debes agregar al menos un envasador", "warning");
+      return;
+    }
 
-    setDialogOpen(false);
+    try {
+      for (const asignacion of formData.asignaciones) {
+        if (
+          !asignacion.envasador_id ||
+          !asignacion.cantidad ||
+          !asignacion.presentacion
+        ) {
+          showAlert("Completa todos los campos", "warning");
+          return;
+        }
 
-    setFormData({
-      envasador_id: "",
-      codigo_articulo: "",
-      nombre_articulo: "",
-    });
+        await iniciar({
+          envasadorId: asignacion.envasador_id,
+          codigoProducto: formData.codigo_articulo,
+          cantidadAsignada: parseInt(asignacion.cantidad),
+          minimoEnvasado: parseInt(asignacion.presentacion),
+        });
+      }
+
+      showAlert("Articulo iniciado correctamente", "success");
+
+      setDialogOpen(false);
+
+      setFormData({
+        codigo_articulo: "",
+        nombre_articulo: "",
+        asignaciones: [
+          { envasador_id: "", cantidad: "", presentacion: "" },
+        ],
+      });
+
+    } catch (err) {
+      showAlert(err.message || "Error al asignar tarea", "error");
+    }
   };
 
-  const handleFinalizar = async () => {
-    await finalizar(procesoSeleccionado.id);
-    setFinalizarDialog(false);
+  const handleFinalizar = async (row) => {
+    try {
+      setLoadingFinalizarId(row.id); // 🔒 bloquea este botón
+
+      await finalizar(row.id);
+
+      showAlert("Articulo finalizado correctamente", "success");
+
+    } catch (error) {
+      showAlert(
+        error?.response?.data?.message || "Error al finalizar",
+        "error"
+      );
+    } finally {
+      setLoadingFinalizarId(null); // 🔓 desbloquea
+    }
   };
 
   useEffect(() => {
-  if (location.state?.codigo) {
-    setFormData({
-      envasador_id: "",
-      codigo_articulo: location.state.codigo,
-      nombre_articulo: location.state.nombre,
-    });
+    if (location.state?.codigo) {
+      setFormData({
+        codigo_articulo: location.state.codigo,
+        nombre_articulo: location.state.nombre,
+        asignaciones: [
+          { envasador_id: "", cantidad: "", presentacion: "" },
+        ],
+      });
 
-    setDialogOpen(true);
-  }
-}, [location.state]);
+      setDialogOpen(true);
+    }
+  }, [location.state]);
 
   const columns = [
     { header: "Código", accessor: "codigoProducto" },
-
     { header: "Descripción", accessor: "nombreProducto" },
-
     {
       header: "Min.Envasado",
       accessor: "minimoEnvasado",
       cell: (row) => <span>{row.minimoEnvasado} pzs</span>,
     },
-
     { header: "Envasador", accessor: "envasadorNombre" },
-
     {
       header: "Inicio",
       cell: (row) => new Date(row.horaInicio).toLocaleTimeString(),
     },
-
     {
       header: "Tiempo",
-      cell: (row) => <TiempoTranscurrido fechaInicio={row.horaInicio} />,
+      cell: (row) => (
+        <TiempoTranscurrido fechaInicio={row.horaInicio} />
+      ),
     },
-
     {
       header: "Acciones",
       cell: (row) => (
@@ -145,13 +179,15 @@ export default function ProcesoEnvasado() {
           variant="contained"
           color="success"
           size="small"
-          startIcon={<Square size={14} />}
-          onClick={() => {
-            setProcesoSeleccionado(row);
-            handleFinalizar();
-          }}
+          disabled={loadingFinalizarId === row.id}
+          onClick={() => handleFinalizar(row)}
+          startIcon={
+            loadingFinalizarId === row.id
+              ? <CircularProgress size={14} color="inherit" />
+              : <Square size={14} />
+          }
         >
-          Finalizar
+          {loadingFinalizarId === row.id ? "Finalizando..." : "Finalizar"}
         </Button>
       ),
     },
@@ -192,40 +228,6 @@ export default function ProcesoEnvasado() {
         envasadoresConTarea={envasadoresConTarea}
         articulos={articulos}
       />
-
-      <Dialog open={finalizarDialog} onClose={() => setFinalizarDialog(false)}>
-        <DialogTitle>Finalizar Envasado</DialogTitle>
-
-        <DialogContent>
-          {procesoSeleccionado && (
-            <Stack spacing={2}>
-              <Paper sx={{ p: 2 }}>
-                <Typography variant="body2">
-                  <strong>Artículo:</strong>{" "}
-                  {procesoSeleccionado.codigoProducto}
-                </Typography>
-
-                <Typography variant="body2">
-                  <strong>Envasador:</strong>{" "}
-                  {procesoSeleccionado.envasadorNombre}
-                </Typography>
-
-                <Typography variant="body2">
-                  <strong>Inicio:</strong>{" "}
-                  {new Date(procesoSeleccionado.horaInicio).toLocaleString()}
-                </Typography>
-              </Paper>
-            </Stack>
-          )}
-        </DialogContent>
-
-        <DialogActions>
-          <Button onClick={() => setFinalizarDialog(false)}>Cancelar</Button>
-          <Button variant="contained" color="error">
-            Finalizar
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 }

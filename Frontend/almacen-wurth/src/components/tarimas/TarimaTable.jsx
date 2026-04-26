@@ -102,7 +102,7 @@ function FilaTarima({
       </TableRow>
 
       {/* ================= ARTICULOS ================= */}
-      <TableRow>
+      <TableRow sx={{borderTop: "2px solid #575757"}}>
         <TableCell colSpan={4} sx={{ p: 0, border: 0 }}>
           <Collapse in={expandida}>
             <Box
